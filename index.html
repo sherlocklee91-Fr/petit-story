@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ayaan et Sara — Full-Cast ElevenLabs Audio Companion</title>
+  <style>
+    :root {
+      --forest: #173634;
+      --forest-hover: #224d4a;
+      --cream: #fcfaf5;
+      --pause-bg: #f5f2e9;
+      --card-bg: #ffffff;
+      --border: #e5e0d5;
+      --amber: #b45309;
+      --amber-bg: #fef3c7;
+      --ink: #1e293b;
+      --muted: #64748b;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+      overflow-x: hidden;
+    }
+
+    .serif { font-family: Georgia, "Times New Roman", serif; }
+
+    /* Top Header */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--forest);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+    }
+    .topbar-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .brand-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .brand-sub {
+      margin: 2px 0 0 0;
+      font-size: 0.72rem;
+      color: #fde68a;
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .speed-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 0.78rem;
+    }
+    .speed-wrap select {
+      background: transparent;
+      color: #ffffff;
+      border: none;
+      font-weight: 700;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .speed-wrap option { color: #0f172a; }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 11px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, opacity 0.15s ease;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-ghost { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.25); }
+    .btn-stop { background: #f59e0b; color: #0f172a; font-weight: 700; }
+    .btn-stop:hover { background: #fbbf24; }
+    .btn-primary { background: var(--forest); color: #ffffff; }
+    .btn-primary:hover { background: var(--forest-hover); }
+    .btn-subtle { background: #f1ede4; color: var(--ink); }
+    .btn-subtle:hover { background: #e5dfd2; }
+    .btn-pill {
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+    .btn-nav-toggle { display: inline-flex; align-items: center; }
+
+    /* Page Shell */
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    .sidebar.open { display: block; }
+    .sidebar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--forest);
+    }
+    .status-pill {
+      font-size: 0.66rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .scene-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .scene-btn {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      color: var(--ink);
+    }
+    .scene-btn:hover { background: #f5f2e9; }
+    .scene-btn.active { background: var(--forest); color: #ffffff; }
+    .scene-btn-fr { font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .scene-btn-en { font-size: 0.7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .scene-btn.active .scene-btn-en { color: #fde68a; }
+    .glossary-nav-btn {
+      margin-top: 10px;
+      width: 100%;
+      text-align: left;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid #fcd34d;
+      background: #fffbeb;
+      color: #92400e;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .glossary-nav-btn:hover { background: #fef3c7; }
+
+    /* Main Stage */
+    .stage {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Hero Card & Mobile-Safe Responsive Image */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    .hero-img-wrap {
+      width: 100%;
+      background: #173634;
+      display: block;
+      position: relative;
+    }
+    .hero-img {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;        /* Scales proportionally on every mobile screen — never hides or crops */
+      margin: 0 auto;
+    }
+    .hero-body {
+      padding: 16px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .kicker {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--amber);
+    }
+    .scene-h2 {
+      margin: 4px 0 2px 0;
+      font-size: 1.5rem;
+      color: var(--forest);
+      line-height: 1.2;
+    }
+    .scene-sub {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Paragraph Cards */
+    .para-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .para-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .playing-card {
+      border-color: var(--forest) !important;
+      background: #f0f7f6 !important;
+      box-shadow: 0 0 0 2px rgba(23, 54, 52, 0.25);
+    }
+    .para-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .para-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .para-num {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--amber);
+    }
+    .cast-badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #f1ede4;
+      color: #475569;
+      border: 1px solid var(--border);
+    }
+    .bilingual-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .fr-text {
+      margin: 0;
+      font-size: 0.98rem;
+      line-height: 1.65;
+      color: #0f172a;
+    }
+    .en-text {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #475569;
+      padding-top: 10px;
+      border-top: 1px solid #ede8dc;
+    }
+
+    /* Reading Pause */
+    .pause-box {
+      background: var(--pause-bg);
+      border: 1px solid #e2d8be;
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .pause-h3 {
+      margin: 3px 0 2px 0;
+      font-size: 1.2rem;
+      color: var(--forest);
+    }
+    .model-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .model-fr { font-weight: 700; font-size: 0.95rem; color: #0f172a; }
+    .model-ipa { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: #92400e; margin-top: 2px; }
+    .model-en { font-size: 0.82rem; color: #475569; margin-top: 2px; }
+
+    .prompts-card {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .prompts-list {
+      margin: 6px 0 0 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.88rem;
+      color: #334155;
+    }
+
+    /* Glossary */
+    .glossary-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+    .glossary-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .search-input {
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.88rem;
+      width: 100%;
+      max-width: 260px;
+    }
+    .glossary-row {
+      padding: 12px 8px;
+      border-top: 1px solid #ede8dc;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-radius: 8px;
+    }
+
+    /* Tablet & Desktop Breakpoints */
+    @media (min-width: 768px) {
+      .bilingual-grid.two-col {
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+      .bilingual-grid.two-col .en-text {
+        padding-top: 0;
+        border-top: none;
+        padding-left: 16px;
+        border-left: 1px solid #ede8dc;
+      }
+      .hero-img {
+        max-height: 420px;
+        width: auto;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .btn-nav-toggle { display: none; }
+      .shell {
+        grid-template-columns: 260px 1fr;
+        padding: 20px;
+      }
+      .sidebar {
+        display: block;
+        position: sticky;
+        top: 76px;
+        max-height: calc(100vh - 96px);
+        overflow-y: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-row">
+        <button id="toggleNavBtn" type="button" class="btn btn-ghost btn-nav-toggle">☰ Scenes</button>
+        <div>
+          <h1 class="serif brand-title">Ayaan et Sara</h1>
+          <p class="brand-sub">Full-Cast Bilingual Reader • ElevenLabs Audio</p>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <div class="speed-wrap">
+          <label for="speedSelect">Speed:</label>
+          <select id="speedSelect">
+            <option value="0.75">0.75x</option>
+            <option value="0.85">0.85x</option>
+            <option value="1" selected>1.0x</option>
+            <option value="1.15">1.15x</option>
+          </select>
+        </div>
+        <button id="toggleEnglishBtn" type="button" class="btn btn-ghost">Hide English</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside id="sidebarNav" class="sidebar">
+      <div class="sidebar-head">
+        <span class="sidebar-title">Twelve Scenes</span>
+        <span id="audioSourcePill" class="status-pill">Full Cast</span>
+      </div>
+      <nav id="sceneNavList" class="scene-list"></nav>
+      <button id="openGlossaryBtn" type="button" class="glossary-nav-btn">
+        Glossary — Words to Carry (24)
+      </button>
+    </aside>
+
+    <main id="readerStage" class="stage"></main>
+  </div>
+
+  <audio id="mp3Player" preload="none"></audio>
+
+  <script>
+    const STORY = {"title": "Ayaan et Sara", "subtitle": "Ayaan and Sara — Bilingual Illustrated Story", "coverImage": "images/cover.jpg", "scenes": [{"num": 1, "titleFr": "Un après-midi doré", "titleEn": "The golden afternoon", "image": "images/scene_01.jpg", "pause": {"title": "The scene and what happens in it", "subtitle": "Imparfait, passé composé and an earlier past", "models": [{"fr": "Elle était seule.", "ipa": "/ɛl etɛ sœl/", "en": "She was alone.", "id": "s01_m01", "audio": "audio/s01_m01.mp3"}, {"fr": "Il l’a aperçue.", "ipa": "/il la apɛʁsy/", "en": "He caught sight of her.", "id": "s01_m02", "audio": "audio/s01_m02.mp3"}, {"fr": "Il avait fini ses études.", "ipa": "/il avɛ fini se zetyd/", "en": "He had finished his studies.", "id": "s01_m03", "audio": "audio/s01_m03.mp3"}, {"fr": "Il se serait installé.", "ipa": "/il sə səʁɛ ɛ̃stale/", "en": "He would have settled into his seat.", "id": "s01_m04", "audio": "audio/s01_m04.mp3"}], "prompts": ["1. Describe Sara’s continuing state with the imparfait. Say she was alone.", "2. Say he had finished his studies before the train journey. Use the plus-que-parfait."]}, "paragraphs": [{"id": "s01_p01", "cast": "Narrator", "segments": [{"id": "s01_p01", "audio": "audio/s01_p01.mp3", "voice": "NARRATOR", "text": "Elle était assise en face de lui. C’était son dernier jour à l’université. Ce jour-là, il avait obtenu son master et débordait de confiance. Sur le chemin du retour, il l’avait aperçue dans le train. Elle était seule, silencieuse, occupée à regarder par la fenêtre. Un livre reposait sur ses genoux. Il était tombé sous son charme à l’instant même où il l’avait vue, et personne ne pouvait lui en vouloir. C’était un bel après-midi. La lumière du soleil couchant sur son visage sans défaut lui donnait l’air d’être faite d’or. Ses grands yeux auraient pu hypnotiser n’importe quel être libre, que la vie n’accablait pas encore. Et ce jour-là, lui n’avait aucun poids sur les épaules."}], "fr": "Elle était assise en face de lui. C’était son dernier jour à l’université. Ce jour-là, il avait obtenu son master et débordait de confiance. Sur le chemin du retour, il l’avait aperçue dans le train. Elle était seule, silencieuse, occupée à regarder par la fenêtre. Un livre reposait sur ses genoux. Il était tombé sous son charme à l’instant même où il l’avait vue, et personne ne pouvait lui en vouloir. C’était un bel après-midi. La lumière du soleil couchant sur son visage sans défaut lui donnait l’air d’être faite d’or. Ses grands yeux auraient pu hypnotiser n’importe quel être libre, que la vie n’accablait pas encore. Et ce jour-là, lui n’avait aucun poids sur les épaules.", "en": "She was sitting on a seat across from him. It was the last day of his college. He had passed his postgraduation today. He was riding high on confidence that day. And while going back he saw her on the train. She was alone, quiet, minding her own business, looking out of the window. There was a book sitting on her lap. He fell for her the very instant he saw her, and no one can blame him. It was a pleasant afternoon. The light from the setting sun on her blemishless face made her look like she was made of gold. Those big eyes could hypnotize any free person who is not already burdened by life, and on that day, he was unburdened."}, {"id": "s01_p02", "cast": "Narrator", "segments": [{"id": "s01_p02", "audio": "audio/s01_p02.mp3", "voice": "NARRATOR", "text": "Il rentrait chez lui. Il avait presque une nuit de train devant lui. Un autre jour, il se serait installé, aurait fermé les yeux et serait arrivé dans sa ville vers minuit. Mais ce jour-là était différent."}], "fr": "Il rentrait chez lui. Il avait presque une nuit de train devant lui. Un autre jour, il se serait installé, aurait fermé les yeux et serait arrivé dans sa ville vers minuit. Mais ce jour-là était différent.", "en": "He was going back home, almost a night’s journey on the train. And had it been a normal day he would have sat on his seat, closed his eyes and reached his hometown by midnight. However, today was different."}, {"id": "s01_p03", "cast": "Narrator", "segments": [{"id": "s01_p03", "audio": "audio/s01_p03.mp3", "voice": "NARRATOR", "text": "Il voulait lui parler. Pourtant, il n’était pas de ceux qui savaient charmer les autres et trouver leur place dans n’importe quelle situation. Il était ordinaire. Quelqu’un de bien, mais de simple. Il espérait désespérément qu’une occasion se présenterait, quelque chose qui lui permettrait d’entrer en contact avec elle et de lui faire bonne impression."}], "fr": "Il voulait lui parler. Pourtant, il n’était pas de ceux qui savaient charmer les autres et trouver leur place dans n’importe quelle situation. Il était ordinaire. Quelqu’un de bien, mais de simple. Il espérait désespérément qu’une occasion se présenterait, quelque chose qui lui permettrait d’entrer en contact avec elle et de lui faire bonne impression.", "en": "He wanted to interact with her. But he was not the kind of person who was gifted to charm his way into any situation. He was ordinary. Good but simple. He desperately wanted a situation to present itself where he could somehow interact with her positively."}, {"id": "s01_p04", "cast": "Narrator", "segments": [{"id": "s01_p04", "audio": "audio/s01_p04.mp3", "voice": "NARRATOR", "text": "Alors il observait ce qui se passait autour de lui, lui jetait quelques regards furtifs et priait Dieu de lui offrir une occasion. Le temps passait, mais rien ne se produisait. Son enthousiasme a commencé à retomber. Il s’est mis à penser qu’il était déjà trop tard. Qui sait, elle descendrait peut-être à la prochaine gare. Peut-être avait-elle déjà un petit ami ou, pire encore pour lui, était-elle fiancée."}], "fr": "Alors il observait ce qui se passait autour de lui, lui jetait quelques regards furtifs et priait Dieu de lui offrir une occasion. Le temps passait, mais rien ne se produisait. Son enthousiasme a commencé à retomber. Il s’est mis à penser qu’il était déjà trop tard. Qui sait, elle descendrait peut-être à la prochaine gare. Peut-être avait-elle déjà un petit ami ou, pire encore pour lui, était-elle fiancée.", "en": "So he kept on scanning the scene, stealing a few looks at her face, praying to God for an opportunity. Some time passed, nothing was giving in. His initial excitement started to wane. He started to think, it’s too late now, who knows, she might get down at the next station itself, who knows if she already had a boyfriend or worse, was engaged."}, {"id": "s01_p05", "cast": "Narrator", "segments": [{"id": "s01_p05", "audio": "audio/s01_p05.mp3", "voice": "NARRATOR", "text": "À chaque seconde, son cœur se calmait un peu. Cette course folle avait commencé quand il l’avait vue ou, plus exactement, quand il avait espéré pouvoir lui parler, quand cela lui avait semblé possible. Maintenant, elle ralentissait. Tout redevenait un peu plus normal. Il commençait à penser à ce qu’il ferait une fois rentré chez lui."}], "fr": "À chaque seconde, son cœur se calmait un peu. Cette course folle avait commencé quand il l’avait vue ou, plus exactement, quand il avait espéré pouvoir lui parler, quand cela lui avait semblé possible. Maintenant, elle ralentissait. Tout redevenait un peu plus normal. Il commençait à penser à ce qu’il ferait une fois rentré chez lui.", "en": "With each passing second his heart became a bit calmer. That initial sprint his heart started when he saw her, or more accurately when he hoped to interact with her, when he thought it was possible, started slowing down. Things were becoming a bit more normal. He now started thinking about what he would do after going home."}]}, {"num": 2, "titleFr": "Une deuxième chance", "titleEn": "A second chance", "image": "images/scene_02.jpg", "pause": {"title": "A seat request and two kinds of pronoun", "subtitle": "Polite requests, lui and movement with être", "models": [{"fr": "Vous pourriez vous décaler un peu ?", "ipa": "/vu puʁje vu dekale œ̃ pø/", "en": "Could you move over a little?", "id": "s02_m01", "audio": "audio/s02_m01.mp3"}, {"fr": "Elle est descendue du train.", "ipa": "/ɛl ɛ desɑ̃dy dy tʁɛ̃/", "en": "She got off the train.", "id": "s02_m02", "audio": "audio/s02_m02.mp3"}, {"fr": "Il lui a laissé la place côté fenêtre.", "ipa": "/il lɥi a lese la plas kote fənɛtʁ/", "en": "He let her have the window seat.", "id": "s02_m03", "audio": "audio/s02_m03.mp3"}], "prompts": ["1. Make a polite request for someone to move over a little. Use the conditional.", "2. Say that he let her have the window seat. Use lui for Sara."]}, "paragraphs": [{"id": "s02_p01", "cast": "Narrator", "segments": [{"id": "s02_p01", "audio": "audio/s02_p01.mp3", "voice": "NARRATOR", "text": "À l’arrêt suivant, elle est descendue du train. Il l’a suivie des yeux en cachette, désespéré. Il s’est maudit tout bas d’être aussi timide. Puis il s’est moqué de lui-même pour avoir cru que quelque chose pourrait arriver. Pourtant, une étrange douleur lui restait au cœur. Rien ne s’était passé, et malgré cela, il avait mal."}], "fr": "À l’arrêt suivant, elle est descendue du train. Il l’a suivie des yeux en cachette, désespéré. Il s’est maudit tout bas d’être aussi timide. Puis il s’est moqué de lui-même pour avoir cru que quelque chose pourrait arriver. Pourtant, une étrange douleur lui restait au cœur. Rien ne s’était passé, et malgré cela, il avait mal.", "en": "And at the next stop she got off the train. His eyes followed her secretly, in despair. He softly cursed himself for being timid. And also ridiculed himself for hoping anything could happen. But it left a strange pain in his heart. Even though nothing had happened, still there was a pain in his heart."}, {"id": "s02_p02", "cast": "Narrator", "segments": [{"id": "s02_p02", "audio": "audio/s02_p02.mp3", "voice": "NARRATOR", "text": "Mais…"}], "fr": "Mais…", "en": "But …"}, {"id": "s02_p03", "cast": "Narrator", "segments": [{"id": "s02_p03", "audio": "audio/s02_p03.mp3", "voice": "NARRATOR", "text": "Il a mis ses écouteurs, fermé les yeux et appuyé la tête contre son siège. C’est alors qu’il a senti une légère tape sur son épaule. Il a ouvert les yeux. La même jeune femme, celle qui semblait faite d’or, se tenait devant lui. Son cœur a explosé de nouveau. Incapable de comprendre ce qui se passait, il est devenu maladroit et s’est emmêlé en retirant ses écouteurs. Elle lui a demandé s’il pouvait se décaler un peu pour la laisser s’asseoir. Il était stupéfait. Devant son air perdu, elle lui a expliqué qu’elle était descendue acheter quelque chose à la gare. À son retour, quelqu’un avait pris sa place."}], "fr": "Il a mis ses écouteurs, fermé les yeux et appuyé la tête contre son siège. C’est alors qu’il a senti une légère tape sur son épaule. Il a ouvert les yeux. La même jeune femme, celle qui semblait faite d’or, se tenait devant lui. Son cœur a explosé de nouveau. Incapable de comprendre ce qui se passait, il est devenu maladroit et s’est emmêlé en retirant ses écouteurs. Elle lui a demandé s’il pouvait se décaler un peu pour la laisser s’asseoir. Il était stupéfait. Devant son air perdu, elle lui a expliqué qu’elle était descendue acheter quelque chose à la gare. À son retour, quelqu’un avait pris sa place.", "en": "He plugged in his earphones, closed his eyes and lay back on his seat when he felt a tap on his shoulder. He opened his eyes and saw the same girl made of gold in front of his eyes. His heart exploded once more. Not being able to understand anything, he became all clumsy and fumbled while unplugging his earphones. She asked him if he could move a bit so that she could sit. He was awestruck. Upon seeing his confused demeanour, she explained that she got down at the station to buy something, and by the time she came back someone else had taken her previous seat."}, {"id": "s02_p04", "cast": "Narrator + Ayaan", "segments": [{"id": "s02_p04_1", "audio": "audio/s02_p04_1.mp3", "voice": "NARRATOR", "text": "Il l’entendait parler, mais avait encore du mal à comprendre ses mots. À la fin de sa phrase, il a pourtant réussi à se ressaisir."}, {"id": "s02_p04_2", "audio": "audio/s02_p04_2.mp3", "voice": "MALE_LEAD", "text": "Oui, oui"}, {"id": "s02_p04_3", "audio": "audio/s02_p04_3.mp3", "voice": "NARRATOR", "text": "a-t-il lâché. En commençant à se déplacer, il a osé lui demander à quelle gare elle descendait. Avant qu’elle ait le temps de répondre, il s’est empressé de préciser pourquoi. Si elle descendait avant lui, il lui laisserait la place côté couloir. Sinon, il prendrait cette place et lui laisserait celle côté fenêtre."}], "fr": "Il l’entendait parler, mais avait encore du mal à comprendre ses mots. À la fin de sa phrase, il a pourtant réussi à se ressaisir. « Oui, oui », a-t-il lâché. En commençant à se déplacer, il a osé lui demander à quelle gare elle descendait. Avant qu’elle ait le temps de répondre, il s’est empressé de préciser pourquoi. Si elle descendait avant lui, il lui laisserait la place côté couloir. Sinon, il prendrait cette place et lui laisserait celle côté fenêtre.", "en": "He was hearing her say words but was still having difficulty registering anything. However, by the end of her sentence he pulled himself together. He blurted out “Yes, yes”. While starting to move he made a bold move and asked where she was getting down, and while she was contemplating about saying something he quickly clarified: if she was getting down beforee him he would give her the aisle seat, or if not he would take the aisle and give her the window seat."}, {"id": "s02_p05", "cast": "Narrator", "segments": [{"id": "s02_p05", "audio": "audio/s02_p05.mp3", "voice": "NARRATOR", "text": "Elle a nommé une gare située avant la sienne, mais encore assez loin. Il a donc hésité, puis lui a demandé quelle place elle préférait, puisque le trajet serait encore long. Côté couloir ou côté fenêtre ? Avec courtoisie, elle lui a répondu qu’elle prendrait celle qui lui conviendrait à lui. Il lui a galamment laissé la fenêtre. L’instant d’après, il s’est dit qu’une fille aussi belle devait recevoir ce genre d’attentions tout le temps. Il n’avait rien fait d’extraordinaire. Peut-être même avait-il choisi l’approche la plus banale."}], "fr": "Elle a nommé une gare située avant la sienne, mais encore assez loin. Il a donc hésité, puis lui a demandé quelle place elle préférait, puisque le trajet serait encore long. Côté couloir ou côté fenêtre ? Avec courtoisie, elle lui a répondu qu’elle prendrait celle qui lui conviendrait à lui. Il lui a galamment laissé la fenêtre. L’instant d’après, il s’est dit qu’une fille aussi belle devait recevoir ce genre d’attentions tout le temps. Il n’avait rien fait d’extraordinaire. Peut-être même avait-il choisi l’approche la plus banale.", "en": "She named a station which was beforee his but still reasonably far, so he paused and asked her, as it was still far away, if she was more comfortable with the aisle or window seat. The girl courteously said whichever he was okay with. He chivalrously gave her the window seat, but in the next instant thought, she is a beautiful girl and she must be getting such courteous treatment all the time, and it is nothing great that he has done, or more so he has opted for the more boring approach."}, {"id": "s02_p06", "cast": "Narrator", "segments": [{"id": "s02_p06", "audio": "audio/s02_p06.mp3", "voice": "NARRATOR", "text": "Ils sont restés un moment sans parler. Mais ce silence le rendait fou. Dieu lui avait offert une nouvelle chance, pensait-il, et il devait la saisir. Il avait déjà ressenti une fois la douleur de la perdre et ne voulait pas la revivre. Il a songé à lui demander pourquoi elle se rendait dans cette ville. Puis il y a renoncé. Elle pourrait croire qu’il lui avait demandé sa gare uniquement pour pouvoir lui poser cette question."}], "fr": "Ils sont restés un moment sans parler. Mais ce silence le rendait fou. Dieu lui avait offert une nouvelle chance, pensait-il, et il devait la saisir. Il avait déjà ressenti une fois la douleur de la perdre et ne voulait pas la revivre. Il a songé à lui demander pourquoi elle se rendait dans cette ville. Puis il y a renoncé. Elle pourrait croire qu’il lui avait demandé sa gare uniquement pour pouvoir lui poser cette question.", "en": "They sat in silence for a bit. But the silence was killing him. He thought that God had given him another chance, and he should make it count. He had already endured the pain of losing her once, and he did not want to experience it again. He thought of asking her about what was her reason to travel to the said place (the station she was getting off at), but he did not want to use that information, as she might think that he had asked her her station just to talk to her about it."}]}, {"num": 3, "titleFr": "Des alliés inattendus", "titleEn": "Unexpected allies", "image": "images/scene_03.jpg", "pause": {"title": "Getting a conversation started", "subtitle": "Everyday questions and stressed pronouns", "models": [{"fr": "Vous allez où ?", "ipa": "/vu zale u/", "en": "Where are you going?", "id": "s03_m01", "audio": "audio/s03_m01.mp3"}, {"fr": "Moi, je rentre chez moi.", "ipa": "/mwa ʒə ʁɑ̃tʁ ʃe mwa/", "en": "As for me, I’m going home.", "id": "s03_m02", "audio": "audio/s03_m02.mp3"}, {"fr": "Ils se sont présentés.", "ipa": "/il sə sɔ̃ pʁezɑ̃te/", "en": "They introduced themselves.", "id": "s03_m03", "audio": "audio/s03_m03.mp3"}], "prompts": ["1. Ask politely where someone is going. Put the question word at the end.", "2. Say they introduced themselves. Use the passé composé."]}, "paragraphs": [{"id": "s03_p01", "cast": "Narrator + Raman", "segments": [{"id": "s03_p01_1", "audio": "audio/s03_p01_1.mp3", "voice": "NARRATOR", "text": "Pendant qu’il cherchait un moyen de briser la glace, des anges sont apparus sur la banquette d’en face. Les anges peuvent prendre toutes sortes de formes. Ceux-ci avaient l’apparence d’un couple branché, qui leur a demandé à tous les deux :"}, {"id": "s03_p01_2", "audio": "audio/s03_p01_2.mp3", "voice": "MALE_SUPPORT", "text": "Vous allez où, tous les deux ?"}], "fr": "Pendant qu’il cherchait un moyen de briser la glace, des anges sont apparus sur la banquette d’en face. Les anges peuvent prendre toutes sortes de formes. Ceux-ci avaient l’apparence d’un couple branché, qui leur a demandé à tous les deux : « Vous allez où, tous les deux ? »", "en": "And in that struggle to break the ice, angels appeared in the front seat. Angels come in all shapes and forms, and this was in the form of a hipster couple, who asked them collectively, “where are you guys going?”"}, {"id": "s03_p02", "cast": "Narrator + Ayaan", "segments": [{"id": "s03_p02_1", "audio": "audio/s03_p02_1.mp3", "voice": "NARRATOR", "text": "C’était un autre cadeau que Dieu lui faisait ce soir-là. La question les a pris tous les deux au dépourvu. Surpris, il a commencé :"}, {"id": "s03_p02_2", "audio": "audio/s03_p02_2.mp3", "voice": "MALE_LEAD", "text": "Nous… Moi, je vais à ma ville, et elle…"}, {"id": "s03_p02_3", "audio": "audio/s03_p02_3.mp3", "voice": "NARRATOR", "text": "Il s’est interrompu pour la regarder. Elle le regardait aussi. Il n’a pas terminé sa phrase."}], "fr": "C’était un autre cadeau que Dieu lui faisait ce soir-là. La question les a pris tous les deux au dépourvu. Surpris, il a commencé : « Nous… Moi, je vais à [ma ville], et elle… » Il s’est interrompu pour la regarder. Elle le regardait aussi. Il n’a pas terminé sa phrase.", "en": "It was another gift God had granted him this evening. The question caught both of them off guard. Startled, he responded, “we” and he said, “I am going to [my hometown], and she…” and he paused and looked at her and she was looking at him and he stopped."}, {"id": "s03_p03", "cast": "Narrator", "segments": [{"id": "s03_p03", "audio": "audio/s03_p03.mp3", "voice": "NARRATOR", "text": "Elle semblait un peu confuse, mais elle est tout de même entrée dans le jeu et a répondu qu’elle allait à Hyderabad."}], "fr": "Elle semblait un peu confuse, mais elle est tout de même entrée dans le jeu et a répondu qu’elle allait à Hyderabad.", "en": "She looked a bit confused but still played along and responded by saying she was going to Hyderabad."}, {"id": "s03_p04", "cast": "Narrator", "segments": [{"id": "s03_p04", "audio": "audio/s03_p04.mp3", "voice": "NARRATOR", "text": "Le couple était maintenant perplexe à son tour. Mais les deux voyageurs se sont vite repris et, heureusement, ont expliqué qu’eux aussi allaient à Hyderabad."}], "fr": "Le couple était maintenant perplexe à son tour. Mais les deux voyageurs se sont vite repris et, heureusement, ont expliqué qu’eux aussi allaient à Hyderabad.", "en": "Now the couple was confused, but recovered and luckily said that they too were going to Hyderabad."}, {"id": "s03_p05", "cast": "Narrator", "segments": [{"id": "s03_p05", "audio": "audio/s03_p05.mp3", "voice": "NARRATOR", "text": "Ils ont échangé quelques banalités, parlé de la longueur du trajet, puis se sont présentés."}], "fr": "Ils ont échangé quelques banalités, parlé de la longueur du trajet, puis se sont présentés.", "en": "They engaged in small talk and talked about how long the journey was. And introduced themselves."}, {"id": "s03_p06", "cast": "Narrator", "segments": [{"id": "s03_p06", "audio": "audio/s03_p06.mp3", "voice": "NARRATOR", "text": "L’homme s’appelait Raman et la femme, Sushmita. Comme il fallait bien répondre, notre jeune homme s’est présenté à son tour. Ayaan. Encore un peu hésitante, la jeune femme a elle aussi donné son prénom. Sara."}], "fr": "L’homme s’appelait Raman et la femme, Sushmita. Comme il fallait bien répondre, notre jeune homme s’est présenté à son tour. Ayaan. Encore un peu hésitante, la jeune femme a elle aussi donné son prénom. Sara.", "en": "The couple introduced themselves: the male guy was named Raman and the female was Sushmita. And with obligation our boy also introduced himself as Ayaan. And the girl still reluctantly played along and shared her name. Sara."}, {"id": "s03_p07", "cast": "Narrator", "segments": [{"id": "s03_p07", "audio": "audio/s03_p07.mp3", "voice": "NARRATOR", "text": "Peu à peu, le cœur d’Ayaan retrouvait un rythme normal. Il manquait encore un battement chaque fois qu’il regardait Sara, mais il ne s’emballait plus. Cela lui permettait de se calmer et de retrouver ses esprits."}], "fr": "Peu à peu, le cœur d’Ayaan retrouvait un rythme normal. Il manquait encore un battement chaque fois qu’il regardait Sara, mais il ne s’emballait plus. Cela lui permettait de se calmer et de retrouver ses esprits.", "en": "So now slowly Ayaan’s heartbeats were coming back to normal. He still skipped a beat whenever he looked at Sara, but it was not racing anymore, which had helped him calm a bit down and regain his senses."}, {"id": "s03_p08", "cast": "Narrator", "segments": [{"id": "s03_p08", "audio": "audio/s03_p08.mp3", "voice": "NARRATOR", "text": "Sara et Sushmita se sont rapidement senties à l’aise l’une avec l’autre. Elles ont échangé des compliments sur leurs bijoux et sur d’autres petites choses."}], "fr": "Sara et Sushmita se sont rapidement senties à l’aise l’une avec l’autre. Elles ont échangé des compliments sur leurs bijoux et sur d’autres petites choses.", "en": "Sara and Sushmita became comfortable with each other. They exchanged compliments about each other’s jewellery, etc."}, {"id": "s03_p09", "cast": "Narrator", "segments": [{"id": "s03_p09", "audio": "audio/s03_p09.mp3", "voice": "NARRATOR", "text": "Du plus profond de son cœur, Ayaan enviait Sushmita. Il écoutait chacun des mots qui sortaient de la bouche de Sara, tout en prenant un air détaché. Il a parlé un peu avec Raman de son travail, de l’endroit où il vivait et de choses semblables."}], "fr": "Du plus profond de son cœur, Ayaan enviait Sushmita. Il écoutait chacun des mots qui sortaient de la bouche de Sara, tout en prenant un air détaché. Il a parlé un peu avec Raman de son travail, de l’endroit où il vivait et de choses semblables.", "en": "Ayaan envied Sushmita with the deepest corner of his heart. He was listening to every word that left Sara’s mouth, nonchalantly. He had a brief conversation with Raman about what he did, where he lived, etc."}]}, {"num": 4, "titleFr": "Son premier rire", "titleEn": "Her first laugh", "image": "images/scene_04.jpg", "pause": {"title": "Hunger and questions inside a sentence", "subtitle": "Avoir faim and indirect yes-or-no questions", "models": [{"fr": "Tu n’as pas un peu faim ?", "ipa": "/ty na pa œ̃ pø fɛ̃/", "en": "Aren’t you a little hungry?", "id": "s04_m01", "audio": "audio/s04_m01.mp3"}, {"fr": "Elle lui a demandé s’il avait faim.", "ipa": "/ɛl lɥi a dəmɑ̃de sil avɛ fɛ̃/", "en": "She asked him whether he was hungry.", "id": "s04_m02", "audio": "audio/s04_m02.mp3"}, {"fr": "Tu es sûre ?", "ipa": "/ty ɛ syʁ/", "en": "Are you sure?", "id": "s04_m03", "audio": "audio/s04_m03.mp3"}], "prompts": ["1. Ask a female friend whether she is sure.", "2. Report that she asked him whether he was hungry. Use lui and si."]}, "paragraphs": [{"id": "s04_p01", "cast": "Narrator + Sara", "segments": [{"id": "s04_p01_1", "audio": "audio/s04_p01_1.mp3", "voice": "NARRATOR", "text": "À la gare suivante, Raman et Sushmita sont descendus acheter quelque chose. Sara s’est tournée vers Ayaan."}, {"id": "s04_p01_2", "audio": "audio/s04_p01_2.mp3", "voice": "FEMALE_LEAD", "text": "Elle parle sans arrêt, non ?"}], "fr": "À la gare suivante, Raman et Sushmita sont descendus acheter quelque chose. Sara s’est tournée vers Ayaan. « Elle parle sans arrêt, non ? »", "en": "At the next station Raman and Sushmita went down to buy something. And Sara turned to Ayaan and said, “She talks continuously, doesn’t she?”"}, {"id": "s04_p02", "cast": "Narrator + Ayaan", "segments": [{"id": "s04_p02_1", "audio": "audio/s04_p02_1.mp3", "voice": "NARRATOR", "text": "C’était la première vraie phrase que Sara lui adressait. Une fois encore, il n’était pas prêt. Il est resté figé une fraction de seconde, puis a répondu doucement :"}, {"id": "s04_p02_2", "audio": "audio/s04_p02_2.mp3", "voice": "MALE_LEAD", "text": "Oui, un peu."}], "fr": "C’était la première vraie phrase que Sara lui adressait. Une fois encore, il n’était pas prêt. Il est resté figé une fraction de seconde, puis a répondu doucement : « Oui, un peu. »", "en": "That was the first real sentence spoken by Sara to Ayaan. He was not ready for it this time either, but he froze for a microsecond and then gently responded, “Yes, a little.”"}, {"id": "s04_p03", "cast": "Sara + Narrator", "segments": [{"id": "s04_p03_1", "audio": "audio/s04_p03_1.mp3", "voice": "FEMALE_LEAD", "text": "Mais elle est gentille"}, {"id": "s04_p03_2", "audio": "audio/s04_p03_2.mp3", "voice": "NARRATOR", "text": "a ajouté Sara."}], "fr": "« Mais elle est gentille », a ajouté Sara.", "en": "“Sweet though,” Sara said."}, {"id": "s04_p04", "cast": "Ayaan + Narrator", "segments": [{"id": "s04_p04_1", "audio": "audio/s04_p04_1.mp3", "voice": "MALE_LEAD", "text": "Oui"}, {"id": "s04_p04_2", "audio": "audio/s04_p04_2.mp3", "voice": "NARRATOR", "text": "a-t-il encore répondu, sans vraiment croire qu’ils étaient en train de se parler."}], "fr": "« Oui », a-t-il encore répondu, sans vraiment croire qu’ils étaient en train de se parler.", "en": "“Yes,” he said again, not believing that they were talking to each other."}, {"id": "s04_p05", "cast": "Ayaan + Narrator", "segments": [{"id": "s04_p05_1", "audio": "audio/s04_p05_1.mp3", "voice": "MALE_LEAD", "text": "Tu n’as pas un peu faim ? Tu voyages depuis longtemps, même depuis avant moi"}, {"id": "s04_p05_2", "audio": "audio/s04_p05_2.mp3", "voice": "NARRATOR", "text": "lui a demandé Ayaan."}], "fr": "« Tu n’as pas un peu faim ? Tu voyages depuis longtemps, même depuis avant moi », lui a demandé Ayaan.", "en": "“Aren’t you a bit hungry, you are travelling for a long time, even before me,” Ayaan said."}, {"id": "s04_p06", "cast": "Narrator", "segments": [{"id": "s04_p06", "audio": "audio/s04_p06.mp3", "voice": "NARRATOR", "text": "Elle a répondu que non, elle allait bien. Elle préférait manger léger en voyage, car le train lui donnait parfois des vertiges. Puis elle lui a demandé s’il avait faim, lui."}], "fr": "Elle a répondu que non, elle allait bien. Elle préférait manger léger en voyage, car le train lui donnait parfois des vertiges. Puis elle lui a demandé s’il avait faim, lui.", "en": "She said no, she was fine. She liked to travel light, as she at times felt dizzy in trains. She asked him if he was hungry."}, {"id": "s04_p07", "cast": "Ayaan + Narrator", "segments": [{"id": "s04_p07_1", "audio": "audio/s04_p07_1.mp3", "voice": "MALE_LEAD", "text": "Un peu"}, {"id": "s04_p07_2", "audio": "audio/s04_p07_2.mp3", "voice": "NARRATOR", "text": "a-t-il dit, avant de lui proposer de lui rapporter quelque chose. Elle a refusé poliment. Il a alors plaisanté :"}, {"id": "s04_p07_3", "audio": "audio/s04_p07_3.mp3", "voice": "MALE_LEAD", "text": "Tu es sûre ? Tu dois tenir tête à Sushmita. Il te faudra de l’énergie."}], "fr": "« Un peu », a-t-il dit, avant de lui proposer de lui rapporter quelque chose. Elle a refusé poliment. Il a alors plaisanté : « Tu es sûre ? Tu dois tenir tête à Sushmita. Il te faudra de l’énergie. »", "en": "“A little,” he said, and asked if he should bring her something. She declined politely and he jokingly replied, “Are you sure? You have to deal with Sushmita, so you will need energy”"}, {"id": "s04_p08", "cast": "Narrator", "segments": [{"id": "s04_p08", "audio": "audio/s04_p08.mp3", "voice": "NARRATOR", "text": "Elle a ri doucement, avec une sorte de gêne amusée. À cet instant, dans sa tête, Ayaan était aussi heureux que s’il avait remporté une bataille. Elle a tout de même refusé. Il est descendu du train, des papillons dans le ventre."}], "fr": "Elle a ri doucement, avec une sorte de gêne amusée. À cet instant, dans sa tête, Ayaan était aussi heureux que s’il avait remporté une bataille. Elle a tout de même refusé. Il est descendu du train, des papillons dans le ventre.", "en": "She laughed softly as if someone was pleasantly embarrassed, and at that moment Ayaan in his mind was as happy as if he had won a battle. She still declined. And Ayaan got off the train with butterflies in his stomach."}]}, {"num": 5, "titleFr": "Une autre place", "titleEn": "The changed seat", "image": "images/scene_05.jpg", "pause": {"title": "An action in progress and an interruption", "subtitle": "Imparfait with passé composé and pouvoir in a request", "models": [{"fr": "Elle lui a demandé si elle pouvait rester là.", "ipa": "/ɛl lɥi a dəmɑ̃de si ɛl puvɛ ʁɛste la/", "en": "She asked him if she could stay there.", "id": "s05_m01", "audio": "audio/s05_m01.mp3"}, {"fr": "Ça me donne mal au cœur.", "ipa": "/sa mə dɔn mal o kœʁ/", "en": "That makes me feel sick.", "id": "s05_m02", "audio": "audio/s05_m02.mp3"}, {"fr": "Il mangeait son sandwich quand le train est reparti.", "ipa": "/il mɑ̃ʒɛ sɔ̃ sɑ̃dwitʃ kɑ̃ lə tʁɛ̃ ɛ ʁəpaʁti/", "en": "He was eating his sandwich when the train set off again.", "id": "s05_m03", "audio": "audio/s05_m03.mp3"}], "prompts": ["1. Say that makes you feel sick. Use me.", "2. Describe the ongoing sandwich-eating and the train setting off again in one sentence."]}, "paragraphs": [{"id": "s05_p01", "cast": "Narrator", "segments": [{"id": "s05_p01", "audio": "audio/s05_p01.mp3", "voice": "NARRATOR", "text": "Sur le quai, un nouveau problème l’attendait. Avec tous ces papillons dans le ventre, l’enjeu lui paraissait soudain immense. Il réfléchissait beaucoup trop à ce qu’il allait acheter. Au lieu de prendre son repas habituel, il a choisi un sandwich. Sara lui avait dit de ne rien lui rapporter, mais il ne voulait pas revenir les mains vides. Il a d’abord pensé à du chocolat, puis a renoncé. Le chocolat lui semblait trop intime. Il a donc pris des biscuits."}], "fr": "Sur le quai, un nouveau problème l’attendait. Avec tous ces papillons dans le ventre, l’enjeu lui paraissait soudain immense. Il réfléchissait beaucoup trop à ce qu’il allait acheter. Au lieu de prendre son repas habituel, il a choisi un sandwich. Sara lui avait dit de ne rien lui rapporter, mais il ne voulait pas revenir les mains vides. Il a d’abord pensé à du chocolat, puis a renoncé. Le chocolat lui semblait trop intime. Il a donc pris des biscuits.", "en": "After he got down there was a conundrum. Now with the butterflies in his stomach, the stakes had gone to the rooftop. Now Ayaan was overthinking what to buy, so rather than getting anything which he usually got he bought a sandwich. And even though Sara told him not to get anything he did not want to go empty-handed. His initial thought was chocolate, but then he dropped the idea thinking that chocolate would be too intimate and took some biscuits."}, {"id": "s05_p02", "cast": "Narrator", "segments": [{"id": "s05_p02", "audio": "audio/s05_p02.mp3", "voice": "NARRATOR", "text": "Après ces achats longuement réfléchis, il est remonté dans le train, plein d’enthousiasme. Mais, à peine entré, il a été ramené sur terre. Sushmita occupait sa place, juste à côté de Sara. Il devait maintenant s’asseoir en face d’elle. Elle serait toujours devant lui, mais plus loin qu’avant."}], "fr": "Après ces achats longuement réfléchis, il est remonté dans le train, plein d’enthousiasme. Mais, à peine entré, il a été ramené sur terre. Sushmita occupait sa place, juste à côté de Sara. Il devait maintenant s’asseoir en face d’elle. Elle serait toujours devant lui, mais plus loin qu’avant.", "en": "After his careful shopping spree, he entered the train full of excitement. But upon entering the train his excitement was grounded again. He saw Sushmita sitting on his seat next to Sara so he had to now sit across from her, still in front but farther than beforee."}, {"id": "s05_p03", "cast": "Narrator", "segments": [{"id": "s05_p03", "audio": "audio/s05_p03.mp3", "voice": "NARRATOR", "text": "Il s’est approché en espérant encore que Sushmita le remarquerait et lui rendrait sa place. Mais après tant de chance, le vent tournait. Sushmita n’a pas bougé. Elle lui a demandé gentiment si elle pouvait rester là. Être assise dos au sens de la marche lui donnait mal au cœur, a-t-elle expliqué. Impuissant, Ayaan a accepté."}], "fr": "Il s’est approché en espérant encore que Sushmita le remarquerait et lui rendrait sa place. Mais après tant de chance, le vent tournait. Sushmita n’a pas bougé. Elle lui a demandé gentiment si elle pouvait rester là. Être assise dos au sens de la marche lui donnait mal au cœur, a-t-elle expliqué. Impuissant, Ayaan a accepté.", "en": "He moved towards his seat still hoping that Sushmita would notice him and vacate his seat, but after a wave of good fortune, now was the time for some payback. Sadly, Sushmita did not vacate his seat and gently asked him if he minded if she sat in this spot. She said that sitting on the opposite side of the train’s movement was making her motion sick. Ayaan helplessly agreed."}, {"id": "s05_p04", "cast": "Narrator", "segments": [{"id": "s05_p04", "audio": "audio/s05_p04.mp3", "voice": "NARRATOR", "text": "Cela l’a ramené à la réalité. La conversation qu’il avait eue avec Sara n’avait rien d’aussi exceptionnel qu’il l’avait cru. La petite bataille qu’il pensait avoir gagnée était bien trop modeste pour mériter le nom de victoire. Il s’est installé en silence près de la fenêtre, en repensant à ce qui venait de se passer."}], "fr": "Cela l’a ramené à la réalité. La conversation qu’il avait eue avec Sara n’avait rien d’aussi exceptionnel qu’il l’avait cru. La petite bataille qu’il pensait avoir gagnée était bien trop modeste pour mériter le nom de victoire. Il s’est installé en silence près de la fenêtre, en repensant à ce qui venait de se passer.", "en": "Ayaan was brought back to the ground after this. He realised that the conversation he had with Sara was nothing too special, the battle he thought he won was too small to be called a victory, and silently sat next to the window, thinking about what had happened."}, {"id": "s05_p05", "cast": "Narrator", "segments": [{"id": "s05_p05", "audio": "audio/s05_p05.mp3", "voice": "NARRATOR", "text": "Raman est revenu et le train est reparti. Ayaan est devenu complètement silencieux. Il mangeait son sandwich et jetait encore quelques regards furtifs à Sara. Il était revenu à la case départ."}], "fr": "Raman est revenu et le train est reparti. Ayaan est devenu complètement silencieux. Il mangeait son sandwich et jetait encore quelques regards furtifs à Sara. Il était revenu à la case départ.", "en": "Raman was back, the train started moving. Ayaan went completely silent. Eating his sandwich. Again stealing glances of Sara, but he was back to square one."}, {"id": "s05_p06", "cast": "Narrator", "segments": [{"id": "s05_p06", "audio": "audio/s05_p06.mp3", "voice": "NARRATOR", "text": "Sushmita occupait beaucoup Sara. Maintenant, Ayaan lui en voulait un peu. Celle qui lui était d’abord apparue comme un ange le faisait souffrir à chaque seconde."}], "fr": "Sushmita occupait beaucoup Sara. Maintenant, Ayaan lui en voulait un peu. Celle qui lui était d’abord apparue comme un ange le faisait souffrir à chaque seconde.", "en": "Sushmita was keeping Sara a bit busy. Ayaan now hated Sushmita a little bit. Sushmita who once came in as an angel was hurting Ayaan with each passing second."}]}, {"num": 6, "titleFr": "La conversation s’ouvre", "titleEn": "The conversation opens", "image": "images/scene_06.jpg", "pause": {"title": "Where someone comes from and what just", "subtitle": "happened", "models": [{"fr": "Elle venait de cette ville.", "ipa": "/ɛl vənɛ də sɛt vil/", "en": "She came from that city.", "id": "s06_m01", "audio": "audio/s06_m01.mp3"}, {"fr": "Il venait de terminer ses études.", "ipa": "/il vənɛ də tɛʁmine se zetyd/", "en": "He had just finished his studies.", "id": "s06_m02", "audio": "audio/s06_m02.mp3"}, {"fr": "Elle était célibataire.", "ipa": "/ɛl etɛ selibatɛʁ/", "en": "She was single.", "id": "s06_m03", "audio": "audio/s06_m03.mp3"}], "prompts": ["1. Say he had just finished his studies. Use venait de plus an infinitive.", "2. Say she was single."]}, "paragraphs": [{"id": "s06_p01", "cast": "Narrator", "segments": [{"id": "s06_p01", "audio": "audio/s06_p01.mp3", "voice": "NARRATOR", "text": "s’est rachetée. Elle lui a demandé ce qu’il faisait dans la vie et l’a invité à participer à la conversation."}], "fr": "s’est rachetée. Elle lui a demandé ce qu’il faisait dans la vie et l’a invité à participer à la conversation.", "en": "moments. She asked Ayaan about what he did and involved him in their conversations."}, {"id": "s06_p02", "cast": "Narrator", "segments": [{"id": "s06_p02", "audio": "audio/s06_p02.mp3", "voice": "NARRATOR", "text": "Sushmita lui tendait une bouée de sauvetage. Ayaan l’a saisie. Jusque-là, il avait écouté très attentivement tout ce que Sara lui racontait. Elle venait d’Agra. Elle travaillait à Hyderabad. Et, surtout, elle était célibataire et vivait avec une colocataire."}], "fr": "Sushmita lui tendait une bouée de sauvetage. Ayaan l’a saisie. Jusque-là, il avait écouté très attentivement tout ce que Sara lui racontait. Elle venait d’Agra. Elle travaillait à Hyderabad. Et, surtout, elle était célibataire et vivait avec une colocataire.", "en": "And as Sushmita provided Ayaan a lifeline he grasped it. Till this time he had very attentively heard everything Sara spoke of to Sushmita: that she was from Agra. She was working in Hyderabad. Most importantly, she was single and lived with her roommate."}, {"id": "s06_p03", "cast": "Narrator", "segments": [{"id": "s06_p03", "audio": "audio/s06_p03.mp3", "voice": "NARRATOR", "text": "Ayaan choisissait ses mots avec soin, mais ne voulait ni jouer un rôle ni se vanter. Il leur a parlé de son master en histoire et en économie. Puis il a mentionné son intérêt pour la littérature ourdoue. Comme Sara venait d’Agra, cela les rapprocherait peut-être."}], "fr": "Ayaan choisissait ses mots avec soin, mais ne voulait ni jouer un rôle ni se vanter. Il leur a parlé de son master en histoire et en économie. Puis il a mentionné son intérêt pour la littérature ourdoue. Comme Sara venait d’Agra, cela les rapprocherait peut-être.", "en": "Ayaan chose his words carefully but he did not want to fake or brag about anything. He told them about his postgraduation in history and economics. He brought up his interest in Urdu literature as he thought Sara was from Agra and this would help."}, {"id": "s06_p04", "cast": "Narrator", "segments": [{"id": "s06_p04", "audio": "audio/s06_p04.mp3", "voice": "NARRATOR", "text": "La littérature ourdoue n’a pas aidé la conversation autant qu’il l’espérait, mais il s’est dit que cela valait la peine d’essayer. Puis ils ont parlé de Raman et de Sushmita, de leur rencontre et de leur histoire."}], "fr": "La littérature ourdoue n’a pas aidé la conversation autant qu’il l’espérait, mais il s’est dit que cela valait la peine d’essayer. Puis ils ont parlé de Raman et de Sushmita, de leur rencontre et de leur histoire.", "en": "The Urdu literature part did not help the conversation as much as Ayaan hoped, but he thought it was worth a try. Then the conversation shifted to Sushmita and Raman, about how they met, etc., etc."}]}, {"num": 7, "titleFr": "Le passé de Sara", "titleEn": "Sara’s past", "image": "images/scene_07.jpg", "pause": {"title": "A past inside the past", "subtitle": "Plus-que-parfait, depuis and two object pronouns", "models": [{"fr": "Elle avait eu une longue relation.", "ipa": "/ɛl avɛ y yn lɔ̃ɡ ʁəlasjɔ̃/", "en": "She had had a long relationship.", "id": "s07_m01", "audio": "audio/s07_m01.mp3"}, {"fr": "Depuis, elle se concentrait sur sa carrière.", "ipa": "/dəpɥi ɛl sə kɔ̃sɑ̃tʁɛ syʁ sa kaʁjɛʁ/", "en": "Since then, she had been focusing on her career.", "id": "s07_m02", "audio": "audio/s07_m02.mp3"}, {"fr": "Il ne savait pas comment le lui montrer.", "ipa": "/il nə savɛ pa kɔmɑ̃ lə lɥi mɔ̃tʁe/", "en": "He did not know how to show it to her.", "id": "s07_m03", "audio": "audio/s07_m03.mp3"}], "prompts": ["1. Say she had had a long relationship.", "2. Say he did not know how to show it to her. Keep le before lui."]}, "paragraphs": [{"id": "s07_p01", "cast": "Narrator + Sara", "segments": [{"id": "s07_p01_1", "audio": "audio/s07_p01_1.mp3", "voice": "NARRATOR", "text": "Après leur récit, Sushmita a posé une question très importante. Comment Sara pouvait-elle être encore célibataire ? Sara a semblé un peu triste pendant un instant, puis a retrouvé son expression habituelle."}, {"id": "s07_p01_2", "audio": "audio/s07_p01_2.mp3", "voice": "FEMALE_LEAD", "text": "Je n’ai pas eu autant de chance que vous."}], "fr": "Après leur récit, Sushmita a posé une question très importante. Comment Sara pouvait-elle être encore célibataire ? Sara a semblé un peu triste pendant un instant, puis a retrouvé son expression habituelle. « Je n’ai pas eu autant de chance que vous. »", "en": "After Raman and Sush’s story, Sushmita asked a very important question. She asked Sara how she was still single. Sara seemed a tiny bit sad for a second and then reverted back to normal and said, “Was not as lucky as you guys”."}, {"id": "s07_p02", "cast": "Narrator + Sushmita", "segments": [{"id": "s07_p02_1", "audio": "audio/s07_p02_1.mp3", "voice": "NARRATOR", "text": "Sushmita a insisté."}, {"id": "s07_p02_2", "audio": "audio/s07_p02_2.mp3", "voice": "FEMALE_SUPPORT", "text": "Je n’arrive pas à croire qu’une fille comme toi n’ait trouvé personne !"}], "fr": "Sushmita a insisté. « Je n’arrive pas à croire qu’une fille comme toi n’ait trouvé personne ! »", "en": "Sushmita insisted, saying, “I can’t believe that a girl like you could not find anyone?”"}, {"id": "s07_p03", "cast": "Narrator", "segments": [{"id": "s07_p03", "audio": "audio/s07_p03.mp3", "voice": "NARRATOR", "text": "Sushmita s’était beaucoup confiée et avait parlé ouvertement de sa vie. Sara s’est donc sentie un peu obligée de se confier à son tour. Ce n’était pas qu’elle n’avait trouvé personne. Elle avait eu une longue relation avec quelqu’un. Mais des problèmes familiaux avaient empêché cette histoire d’aboutir. Depuis, elle se concentrait sur sa carrière."}], "fr": "Sushmita s’était beaucoup confiée et avait parlé ouvertement de sa vie. Sara s’est donc sentie un peu obligée de se confier à son tour. Ce n’était pas qu’elle n’avait trouvé personne. Elle avait eu une longue relation avec quelqu’un. Mais des problèmes familiaux avaient empêché cette histoire d’aboutir. Depuis, elle se concentrait sur sa carrière.", "en": "Now as Sushmita had been open about her life, and had been sharing a lot about herself, Sara felt a little obliged to share a little about herself and in her obligation she revealed that it was not that she could not find anyone, in fact she had been in a long-term relationship with someone. But things could not work out due to family issues. And since then she had been focusing on her career."}, {"id": "s07_p04", "cast": "Narrator", "segments": [{"id": "s07_p04", "audio": "audio/s07_p04.mp3", "voice": "NARRATOR", "text": "En quelques instants, Ayaan avait eu l’impression d’être percuté par plusieurs camions. Il se doutait que Sara avait déjà aimé quelqu’un. Pourtant, l’apprendre lui faisait un peu mal. Il était déjà jaloux d’un homme dont il ne savait rien. Puis il s’est senti triste, parce qu’il voyait qu’elle l’était. Il n’était pas triste que leur relation ait échoué. De cela, il aurait peut-être même pu se réjouir. Mais la tristesse de Sara le rendait triste, lui aussi."}], "fr": "En quelques instants, Ayaan avait eu l’impression d’être percuté par plusieurs camions. Il se doutait que Sara avait déjà aimé quelqu’un. Pourtant, l’apprendre lui faisait un peu mal. Il était déjà jaloux d’un homme dont il ne savait rien. Puis il s’est senti triste, parce qu’il voyait qu’elle l’était. Il n’était pas triste que leur relation ait échoué. De cela, il aurait peut-être même pu se réjouir. Mais la tristesse de Sara le rendait triste, lui aussi.", "en": "Ayaan had been hit by a few trucks in the last few moments. He expected that Sara should have been in a relationship in the past, but still he felt a little pain upon learning that she had been in a relationship with someone else. He already was jealous of the person who he knew nothing about. Next he felt sad, because he saw Sara was sad. He did not feel sad because their relationship could not work out, for that he might have been thankful. However, he felt sad because Sara was sad."}, {"id": "s07_p05", "cast": "Narrator", "segments": [{"id": "s07_p05", "audio": "audio/s07_p05.mp3", "voice": "NARRATOR", "text": "Même s’il tenait à elle et souffrait de la voir ainsi, Ayaan ne savait pas comment le lui montrer. Il est donc resté silencieux, en espérant que Sushmita saurait quoi faire."}], "fr": "Même s’il tenait à elle et souffrait de la voir ainsi, Ayaan ne savait pas comment le lui montrer. Il est donc resté silencieux, en espérant que Sushmita saurait quoi faire.", "en": "Ayaan, though he felt sad for Sara and cared for Sara, did not know how to portray it. So he stayed silent and hoped that Sushmita would handle this situation."}, {"id": "s07_p06", "cast": "Narrator", "segments": [{"id": "s07_p06", "audio": "audio/s07_p06.mp3", "voice": "NARRATOR", "text": "Sushmita l’a réconfortée. Elle a d’abord dénoncé les querelles et les manœuvres familiales, puis l’a rassurée. Une fille comme elle n’aurait aucun mal à trouver quelqu’un de bien."}], "fr": "Sushmita l’a réconfortée. Elle a d’abord dénoncé les querelles et les manœuvres familiales, puis l’a rassurée. Une fille comme elle n’aurait aucun mal à trouver quelqu’un de bien.", "en": "Sushmita comforted her, by bashing family politics and tussles first and then reassuring her that a girl like her would have no issue finding a good guy."}]}, {"num": 8, "titleFr": "À son tour de répondre", "titleEn": "His turn to answer", "image": "images/scene_08.jpg", "pause": {"title": "What he wanted her to know", "subtitle": "Vouloir, an infinitive and the subjunctive", "models": [{"fr": "Je suis célibataire.", "ipa": "/ʒə sɥi selibatɛʁ/", "en": "I am single.", "id": "s08_m01", "audio": "audio/s08_m01.mp3"}, {"fr": "Il ne voulait pas se vanter.", "ipa": "/il nə vulɛ pa sə vɑ̃te/", "en": "He did not want to boast.", "id": "s08_m02", "audio": "audio/s08_m02.mp3"}, {"fr": "Il voulait qu’elle sache qu’il était célibataire.", "ipa": "/il vulɛ kɛl saʃ kil etɛ selibatɛʁ/", "en": "He wanted her to know that he was single.", "id": "s08_m03", "audio": "audio/s08_m03.mp3"}], "prompts": ["1. Say you are single.", "2. Say he wanted her to know he was single. Use the model with sache."]}, "paragraphs": [{"id": "s08_p01", "cast": "Narrator", "segments": [{"id": "s08_p01", "audio": "audio/s08_p01.mp3", "voice": "NARRATOR", "text": "Ses paroles ont détendu l’atmosphère. Puis la conversation s’est tournée vers Ayaan. Raman et Sushmita lui ont demandé où il en était, lui, dans sa vie amoureuse. C’était délicat. D’un côté, il ne voulait pas que l’attention se porte sur lui. De l’autre, il voulait que Sara sache qu’il était célibataire."}], "fr": "Ses paroles ont détendu l’atmosphère. Puis la conversation s’est tournée vers Ayaan. Raman et Sushmita lui ont demandé où il en était, lui, dans sa vie amoureuse. C’était délicat. D’un côté, il ne voulait pas que l’attention se porte sur lui. De l’autre, il voulait que Sara sache qu’il était célibataire.", "en": "Sushmita’s words put everyone at ease. And then the conversation shifted to Ayaan, and Sush and Raman asked about his romantic situation. Now here the thing was tricky. On one hand Ayaan did not want the conversation to shift to him. On the other hand he did not want to withhold the information that he was single from Sara."}, {"id": "s08_p02", "cast": "Narrator + Ayaan + Sushmita", "segments": [{"id": "s08_p02_1", "audio": "audio/s08_p02_1.mp3", "voice": "NARRATOR", "text": "Il a hésité, puis a répondu :"}, {"id": "s08_p02_2", "audio": "audio/s08_p02_2.mp3", "voice": "MALE_LEAD", "text": "Je suis célibataire."}, {"id": "s08_p02_3", "audio": "audio/s08_p02_3.mp3", "voice": "NARRATOR", "text": "Sushmita lui a demandé :"}, {"id": "s08_p02_4", "audio": "audio/s08_p02_4.mp3", "voice": "FEMALE_SUPPORT", "text": "Toi aussi, tu as eu des problèmes de famille ?"}], "fr": "Il a hésité, puis a répondu : « Je suis célibataire. » Sushmita lui a demandé : « Toi aussi, tu as eu des problèmes de famille ? »", "en": "He hesitated and replied, “I am single.” To which Sushmita replied, “You also had family issues?”"}, {"id": "s08_p03", "cast": "Narrator", "segments": [{"id": "s08_p03", "audio": "audio/s08_p03.mp3", "voice": "NARRATOR", "text": "Heureusement, pendant que Sushmita réconfortait Sara, Ayaan avait anticipé cette question et préparé une réponse. Il a expliqué qu’il avait surtout beaucoup changé de ville pour ses études. Sa vie n’avait pas été assez stable pour une relation. Ce n’était pas tout à fait vrai, mais c’était ce qu’il avait trouvé de mieux sur le moment."}], "fr": "Heureusement, pendant que Sushmita réconfortait Sara, Ayaan avait anticipé cette question et préparé une réponse. Il a expliqué qu’il avait surtout beaucoup changé de ville pour ses études. Sa vie n’avait pas été assez stable pour une relation. Ce n’était pas tout à fait vrai, mais c’était ce qu’il avait trouvé de mieux sur le moment.", "en": "Luckily Ayaan had thought of an answer anticipating this question while Sushmita was consoling Sara. He said mostly because he had been travelling to different places for studies, he was not stable enough to have a relationship, which was not completely true, but it was the best Ayaan could come up with at that moment."}, {"id": "s08_p04", "cast": "Narrator", "segments": [{"id": "s08_p04", "audio": "audio/s08_p04.mp3", "voice": "NARRATOR", "text": "Sara n’a rien dit. C’était ce qu’Ayaan avait espéré. Il ne voulait ni questions indiscrètes ni attention particulière. Pourtant, son silence le rendait un peu triste."}], "fr": "Sara n’a rien dit. C’était ce qu’Ayaan avait espéré. Il ne voulait ni questions indiscrètes ni attention particulière. Pourtant, son silence le rendait un peu triste.", "en": "Sara said nothing. Silence was what Ayaan hoped for. He did not want prying or attention, but still silence made him a bit sad."}, {"id": "s08_p05", "cast": "Narrator", "segments": [{"id": "s08_p05", "audio": "audio/s08_p05.mp3", "voice": "NARRATOR", "text": "La conversation s’est éteinte naturellement. Le silence est revenu. Ayaan voulait toujours se rapprocher de Sara, mais ne savait pas comment s’y prendre. Ils ont regardé par la fenêtre pendant un moment."}], "fr": "La conversation s’est éteinte naturellement. Le silence est revenu. Ayaan voulait toujours se rapprocher de Sara, mais ne savait pas comment s’y prendre. Ils ont regardé par la fenêtre pendant un moment.", "en": "That conversation waned naturally. Things went silent for a while. Ayaan still wanted Sara, but still had no clue how to proceed. They stared out of the window for some time."}]}, {"num": 9, "titleFr": "Les biscuits", "titleEn": "The biscuits", "image": "images/scene_09.jpg", "pause": {"title": "Keeping someone company and offering", "subtitle": "some", "models": [{"fr": "Je vais lui tenir compagnie.", "ipa": "/ʒə vɛ lɥi təniʁ kɔ̃paɲi/", "en": "I’m going to keep her company.", "id": "s09_m01", "audio": "audio/s09_m01.mp3"}, {"fr": "Tu n’es pas obligé de rester.", "ipa": "/ty nɛ pa ɔbliʒe də ʁɛste/", "en": "You don’t have to stay.", "id": "s09_m02", "audio": "audio/s09_m02.mp3"}, {"fr": "Il lui en a proposé.", "ipa": "/il lɥi ɑ̃n a pʁopoze/", "en": "He offered her some.", "id": "s09_m03", "audio": "audio/s09_m03.mp3"}], "prompts": ["1. Say you are going to keep her company. Use lui.", "2. Say he offered her some. Let en stand for the biscuits."]}, "paragraphs": [{"id": "s09_p01", "cast": "Narrator + Ayaan", "segments": [{"id": "s09_p01_1", "audio": "audio/s09_p01_1.mp3", "voice": "NARRATOR", "text": "Un peu plus tard, le train s’est arrêté dans une grande gare. L’arrêt devait durer presque une heure. Sushmita et Raman voulaient sortir. Ils ont de nouveau invité Sara à les accompagner, mais elle a refusé. Ils ont aussi demandé à Ayaan. Cette fois, lui aussi a refusé."}, {"id": "s09_p01_2", "audio": "audio/s09_p01_2.mp3", "voice": "MALE_LEAD", "text": "Je vais tenir compagnie à Sara."}], "fr": "Un peu plus tard, le train s’est arrêté dans une grande gare. L’arrêt devait durer presque une heure. Sushmita et Raman voulaient sortir. Ils ont de nouveau invité Sara à les accompagner, mais elle a refusé. Ils ont aussi demandé à Ayaan. Cette fois, lui aussi a refusé. « Je vais tenir compagnie à Sara. »", "en": "After some time the train stopped at a major station. Stoppage time was close to an hour. Sushmita and Raman wanted to go outside, they again invited Sara and she declined. They asked Ayaan, and this time he declined too but said, “I will give sara company.”"}, {"id": "s09_p02", "cast": "Narrator + Sara", "segments": [{"id": "s09_p02_1", "audio": "audio/s09_p02_1.mp3", "voice": "NARRATOR", "text": "Devant Raman et Sushmita, Sara a accepté sans rien ajouter. Mais une fois le couple parti, elle lui a dit :"}, {"id": "s09_p02_2", "audio": "audio/s09_p02_2.mp3", "voice": "FEMALE_LEAD", "text": "Ça va, tu n’es pas obligé de rester pour moi. Si tu as besoin de quelque chose, n’hésite pas à sortir."}], "fr": "Devant Raman et Sushmita, Sara a accepté sans rien ajouter. Mais une fois le couple parti, elle lui a dit : « Ça va, tu n’es pas obligé de rester pour moi. Si tu as besoin de quelque chose, n’hésite pas à sortir. »", "en": "Sara accepted it quietly in front of Sush and Raman. However, after they left she said, “I am okay, you don’t have to stay back for me, please feel free to step out if you need something”"}, {"id": "s09_p03", "cast": "Narrator", "segments": [{"id": "s09_p03", "audio": "audio/s09_p03.mp3", "voice": "NARRATOR", "text": "Il l’a doucement rassurée. Il n’avait besoin de rien. Puis il lui a parlé des biscuits achetés à l’arrêt précédent et lui en a proposé."}], "fr": "Il l’a doucement rassurée. Il n’avait besoin de rien. Puis il lui a parlé des biscuits achetés à l’arrêt précédent et lui en a proposé.", "en": "He softly reassured her by saying he did not need anything. He also brought up the biscuits he bought at the previous stop and offered them to Sara."}, {"id": "s09_p04", "cast": "Narrator", "segments": [{"id": "s09_p04", "audio": "audio/s09_p04.mp3", "voice": "NARRATOR", "text": "Épuisée par ses émotions, Sara a accepté les biscuits et l’a remercié. La situation n’était pas particulièrement tendue. Un jour ordinaire, Ayaan n’aurait sans doute rien dit et se serait contenté de devenir son ami. Mais ce jour-là était différent."}], "fr": "Épuisée par ses émotions, Sara a accepté les biscuits et l’a remercié. La situation n’était pas particulièrement tendue. Un jour ordinaire, Ayaan n’aurait sans doute rien dit et se serait contenté de devenir son ami. Mais ce jour-là était différent.", "en": "Sara, being emotionally drained at the moment, accepted the biscuits and thanked him. The situation was not highly volatile and on a normal day Ayaan would not have said anything and accepted Sara as a friend. But today was different."}, {"id": "s09_p05", "cast": "Narrator", "segments": [{"id": "s09_p05", "audio": "audio/s09_p05.mp3", "voice": "NARRATOR", "text": "Hyderabad était encore loin. S’il parlait maintenant, la suite du trajet risquait de devenir très pénible. Pourtant, il avait déjà perdu Sara une fois plus tôt dans la journée, puis, dans son imagination, bien avant cela, au profit d’un homme qu’il n’avait jamais connu. Alors, pour une fois dans sa vie, il a voulu prendre un risque."}], "fr": "Hyderabad était encore loin. S’il parlait maintenant, la suite du trajet risquait de devenir très pénible. Pourtant, il avait déjà perdu Sara une fois plus tôt dans la journée, puis, dans son imagination, bien avant cela, au profit d’un homme qu’il n’avait jamais connu. Alors, pour une fois dans sa vie, il a voulu prendre un risque.", "en": "It was still a long way to Hyderabad. Saying anything at this moment would risk a very painful journey. However, Ayaan had lost Sara, once earlier that day and, in his imagination, once long before to someone he never knew. So for once in his life he wanted to take a risk."}]}, {"num": 10, "titleFr": "Une question sur Hyderabad", "titleEn": "A question about Hyderabad", "image": "images/scene_10.jpg", "pause": {"title": "A possibility he has only imagined", "subtitle": "Si with the imparfait and conditional", "models": [{"fr": "Si je descendais aujourd’hui, ce serait difficile ?", "ipa": "/si ʒə desɑ̃dɛ oʒuʁdɥi sə səʁɛ difisil/", "en": "If I got off today, would it be difficult?", "id": "s10_m01", "audio": "audio/s10_m01.mp3"}, {"fr": "J’aimerais vivre ici.", "ipa": "/ʒɛmʁɛ vivʁ isi/", "en": "I would like to live here.", "id": "s10_m02", "audio": "audio/s10_m02.mp3"}, {"fr": "Tu lui as demandé la permission ?", "ipa": "/ty lɥi a dəmɑ̃de la pɛʁmisjɔ̃/", "en": "Did you ask her permission?", "id": "s10_m03", "audio": "audio/s10_m03.mp3"}], "prompts": ["1. Ask whether it would be difficult if you got off today. Use the hypothetical pattern.", "2. Say you would like to live here."]}, "paragraphs": [{"id": "s10_p01", "cast": "Ayaan + Narrator + Sara", "segments": [{"id": "s10_p01_1", "audio": "audio/s10_p01_1.mp3", "voice": "MALE_LEAD", "text": "C’est comment, la vie à Hyderabad ?"}, {"id": "s10_p01_2", "audio": "audio/s10_p01_2.mp3", "voice": "NARRATOR", "text": "lui a-t-il demandé. Son cœur s’emballait à nouveau pendant qu’il parlait. Sara, qui ne se doutait de rien, lui a répondu :"}, {"id": "s10_p01_3", "audio": "audio/s10_p01_3.mp3", "voice": "FEMALE_LEAD", "text": "On y vit bien. C’est l’une des meilleures villes où vivre en Inde."}, {"id": "s10_p01_4", "audio": "audio/s10_p01_4.mp3", "voice": "NARRATOR", "text": "Mais sa question suivante l’a prise au dépourvu."}], "fr": "« C’est comment, la vie à Hyderabad ? » lui a-t-il demandé. Son cœur s’emballait à nouveau pendant qu’il parlait. Sara, qui ne se doutait de rien, lui a répondu : « On y vit bien. C’est l’une des meilleures villes où vivre en Inde. » Mais sa question suivante l’a prise au dépourvu.", "en": "He asked Sara, “How is Hyderabad to live.” His heart was racing again as he was speaking. Sara, unaware, replied, “It’s a good place. One of the best places in India to live in.” However, his next question caught her off guard."}, {"id": "s10_p02", "cast": "Ayaan", "segments": [{"id": "s10_p02", "audio": "audio/s10_p02.mp3", "voice": "MALE_LEAD", "text": "Si je descendais à Hyderabad aujourd’hui, ce serait difficile de trouver un logement ?"}], "fr": "« Si je descendais à Hyderabad aujourd’hui, ce serait difficile de trouver un logement ? »", "en": "He asked, “if I got down on Hyderabad today. How difficult will it be for me to find a place to live”"}, {"id": "s10_p03", "cast": "Sara", "segments": [{"id": "s10_p03", "audio": "audio/s10_p03.mp3", "voice": "FEMALE_LEAD", "text": "Aujourd’hui ? Pourquoi ?"}], "fr": "« Aujourd’hui ? Pourquoi ? »", "en": "“Today? Why?”"}, {"id": "s10_p04", "cast": "Narrator", "segments": [{"id": "s10_p04", "audio": "audio/s10_p04.mp3", "voice": "NARRATOR", "text": "Le cœur d’Ayaan battait maintenant plus vite que jamais. De l’extérieur, ses lèvres semblaient calmes. À l’intérieur, il tremblait. Il n’avait pas préparé cette conversation."}], "fr": "Le cœur d’Ayaan battait maintenant plus vite que jamais. De l’extérieur, ses lèvres semblaient calmes. À l’intérieur, il tremblait. Il n’avait pas préparé cette conversation.", "en": "Ayaan’s heart was now racing the most it had in his life, his lips fine from outside but trembling internally. He had not rehearsed this conversation."}, {"id": "s10_p05", "cast": "Ayaan + Narrator", "segments": [{"id": "s10_p05_1", "audio": "audio/s10_p05_1.mp3", "voice": "MALE_LEAD", "text": "J’ai rencontré une fille qui vit à Hyderabad et pour qui j’ai des sentiments. Si elle me le permettait, j’aimerais m’y installer"}, {"id": "s10_p05_2", "audio": "audio/s10_p05_2.mp3", "voice": "NARRATOR", "text": "a-t-il dit d’une voix un peu tremblante."}], "fr": "« J’ai rencontré une fille qui vit à Hyderabad et pour qui j’ai des sentiments. Si elle me le permettait, j’aimerais m’y installer », a-t-il dit d’une voix un peu tremblante.", "en": "“I have found a girl who lives in Hyderabad, for whom I have developed feelings. If she gives me permission I would want to move there,” he said with a little shakiness in his voice."}, {"id": "s10_p06", "cast": "Narrator", "segments": [{"id": "s10_p06", "audio": "audio/s10_p06.mp3", "voice": "NARRATOR", "text": "Sara était vulnérable à ce moment-là. Pourtant, elle n’allait pas supposer qu’il parlait d’elle. Elle voulait en être sûre."}], "fr": "Sara était vulnérable à ce moment-là. Pourtant, elle n’allait pas supposer qu’il parlait d’elle. Elle voulait en être sûre.", "en": "Sara, though emotionally vulnerable, was not someone to assume he was talking about her. She would confirm."}, {"id": "s10_p07", "cast": "Sara", "segments": [{"id": "s10_p07", "audio": "audio/s10_p07.mp3", "voice": "FEMALE_LEAD", "text": "Tu lui as demandé la permission ?"}], "fr": "« Tu lui as demandé la permission ? »", "en": "“Did you take her permission?”"}, {"id": "s10_p08", "cast": "Ayaan", "segments": [{"id": "s10_p08", "audio": "audio/s10_p08.mp3", "voice": "MALE_LEAD", "text": "Je voulais le faire, mais elle a une nouvelle amie qui ne la laisse jamais seule."}], "fr": "« Je voulais le faire, mais elle a une nouvelle amie qui ne la laisse jamais seule. »", "en": "“I wanted to, but she has a new friend who does not leave her alone”"}]}, {"num": 11, "titleFr": "Pourquoi maintenant", "titleEn": "Why now", "image": "images/scene_11.jpg", "pause": {"title": "Fear, desire and a choice about the future", "subtitle": "Avoir peur de, avoir envie de and si with the present", "models": [{"fr": "J’ai peur de te perdre.", "ipa": "/ʒe pœʁ də tə pɛʁdʁ/", "en": "I’m afraid of losing you.", "id": "s11_m01", "audio": "audio/s11_m01.mp3"}, {"fr": "J’ai envie de te connaître.", "ipa": "/ʒe ɑ̃vi də tə kɔnɛtʁ/", "en": "I want to get to know you.", "id": "s11_m02", "audio": "audio/s11_m02.mp3"}, {"fr": "Si tu ne veux pas ça maintenant, je n’insisterai pas.", "ipa": "/si ty nə vø pa sa mɛ̃tnɑ̃ ʒə nɛ̃sistəʁe pa/", "en": "If you don’t want this now, I won’t push you.", "id": "s11_m03", "audio": "audio/s11_m03.mp3"}], "prompts": ["1. Say you are afraid of losing the person you call tu.", "2. Promise that if they don’t want this now, you won’t push them. Use the open future condition."]}, "paragraphs": [{"id": "s11_p01", "cast": "Narrator + Sara", "segments": [{"id": "s11_p01_1", "audio": "audio/s11_p01_1.mp3", "voice": "NARRATOR", "text": "Sa réponse a levé le doute. Il parlait bien d’elle. Sara a gardé le silence un instant, puis a répliqué :"}, {"id": "s11_p01_2", "audio": "audio/s11_p01_2.mp3", "voice": "FEMALE_LEAD", "text": "C’est parce que mon histoire t’a fait de la peine ?"}], "fr": "Sa réponse a levé le doute. Il parlait bien d’elle. Sara a gardé le silence un instant, puis a répliqué : « C’est parce que mon histoire t’a fait de la peine ? »", "en": "His answer cleared up that she was the girl. Sara paused for a bit and retorted, “Is it because you feel sad for me because of my sad story?”"}, {"id": "s11_p02", "cast": "Narrator", "segments": [{"id": "s11_p02", "audio": "audio/s11_p02.mp3", "voice": "NARRATOR", "text": "Ayaan a été déconcerté. Il n’avait pas imaginé qu’elle pourrait lui poser une telle question. Il n’avait jamais pensé qu’il faudrait expliquer pourquoi il était tombé sous son charme. À ses yeux, elle était parfaite. Aimer Sara lui semblait aussi naturel que la gravité."}], "fr": "Ayaan a été déconcerté. Il n’avait pas imaginé qu’elle pourrait lui poser une telle question. Il n’avait jamais pensé qu’il faudrait expliquer pourquoi il était tombé sous son charme. À ses yeux, elle était parfaite. Aimer Sara lui semblait aussi naturel que la gravité.", "en": "Ayaan was taken aback by this, because he never perceived a question like this from Sara. He never thought anyone had to clarify why they had fallen for Sara, because in his eyes, she was perfect and falling for her was as natural as gravity."}, {"id": "s11_p03", "cast": "Narrator + Ayaan", "segments": [{"id": "s11_p03_1", "audio": "audio/s11_p03_1.mp3", "voice": "NARRATOR", "text": "Sous le choc, il a répondu :"}, {"id": "s11_p03_2", "audio": "audio/s11_p03_2.mp3", "voice": "MALE_LEAD", "text": "Quoi ? Non ! Ce n’est pas à cause de ton histoire."}], "fr": "Sous le choc, il a répondu : « Quoi ? Non ! Ce n’est pas à cause de ton histoire. »", "en": "Ayaan was shocked and he replied, “What? No! Not because of your story.”"}, {"id": "s11_p04", "cast": "Sara", "segments": [{"id": "s11_p04", "audio": "audio/s11_p04.mp3", "voice": "FEMALE_LEAD", "text": "Alors pourquoi ? Pourquoi maintenant ?"}], "fr": "« Alors pourquoi ? Pourquoi maintenant ? »", "en": "And Sara replied, “Then why? Why now?”"}, {"id": "s11_p05", "cast": "Ayaan", "segments": [{"id": "s11_p05", "audio": "audio/s11_p05.mp3", "voice": "MALE_LEAD", "text": "Pourquoi maintenant ? Parce que j’ai peur de te perdre encore une fois. Ça n’a rien à voir avec ton passé. Au contraire, ton histoire m’a fait comprendre que tu avais été avec quelqu’un et que tu pourrais être avec quelqu’un d’autre à l’avenir si je n’agissais pas maintenant. Voilà pourquoi maintenant."}], "fr": "« Pourquoi maintenant ? Parce que j’ai peur de te perdre encore une fois. Ça n’a rien à voir avec ton passé. Au contraire, ton histoire m’a fait comprendre que tu avais été avec quelqu’un et que tu pourrais être avec quelqu’un d’autre à l’avenir si je n’agissais pas maintenant. Voilà pourquoi maintenant. »", "en": "“Why now? Because I fear I might lose you again. It has nothing to do with your past story. If anything it made me realise that you were with someone in the past and you can be with someone else in the future if I do not act now. Hence now.”"}, {"id": "s11_p06", "cast": "Narrator + Sara", "segments": [{"id": "s11_p06_1", "audio": "audio/s11_p06_1.mp3", "voice": "NARRATOR", "text": "Sara était émue et avait du mal à le croire."}, {"id": "s11_p06_2", "audio": "audio/s11_p06_2.mp3", "voice": "FEMALE_LEAD", "text": "Mais comment peux-tu tout quitter pour vivre dans une autre ville ? Tu ne me connais même pas bien !"}], "fr": "Sara était émue et avait du mal à le croire. « Mais comment peux-tu tout quitter pour vivre dans une autre ville ? Tu ne me connais même pas bien ! »", "en": "Sara got emotional now, and having a hard time believing him, she said, “But how can you leave everything and live in a different city? you don’t even know me so well!”"}, {"id": "s11_p07", "cast": "Ayaan", "segments": [{"id": "s11_p07", "audio": "audio/s11_p07.mp3", "voice": "MALE_LEAD", "text": "Je sais, mais j’ai envie de te connaître !"}], "fr": "« Je sais, mais j’ai envie de te connaître ! »", "en": "“I know, but I want to know you!”"}, {"id": "s11_p08", "cast": "Sara", "segments": [{"id": "s11_p08", "audio": "audio/s11_p08.mp3", "voice": "FEMALE_LEAD", "text": "Je ne veux pas ça maintenant. Toi non plus, tu ne veux pas ça maintenant."}], "fr": "« Je ne veux pas ça maintenant. Toi non plus, tu ne veux pas ça maintenant. »", "en": "“I don’t want this right now, you don’t want this right now”"}, {"id": "s11_p09", "cast": "Narrator + Ayaan", "segments": [{"id": "s11_p09_1", "audio": "audio/s11_p09_1.mp3", "voice": "NARRATOR", "text": "En voyant Sara dans cet état, Ayaan a senti toutes ses peurs revenir. Celles qu’il avait éprouvées avant de parler résonnaient de nouveau dans sa tête. Pourtant, il a essayé de la rassurer."}, {"id": "s11_p09_2", "audio": "audio/s11_p09_2.mp3", "voice": "MALE_LEAD", "text": "D’accord, Sara. Comme tu veux. Je voulais simplement te dire, sincèrement, à quel point tu me plais, à quel point je t’admire et combien j’aimerais être avec toi. Mais je ne veux pas te faire de peine. Si tu ne veux pas ça maintenant, je n’insisterai pas."}], "fr": "En voyant Sara dans cet état, Ayaan a senti toutes ses peurs revenir. Celles qu’il avait éprouvées avant de parler résonnaient de nouveau dans sa tête. Pourtant, il a essayé de la rassurer. « D’accord, Sara. Comme tu veux. Je voulais simplement te dire, sincèrement, à quel point tu me plais, à quel point je t’admire et combien j’aimerais être avec toi. Mais je ne veux pas te faire de peine. Si tu ne veux pas ça maintenant, je n’insisterai pas. »", "en": "Ayaan looked at Sara in this state and all his fears started coming back to him. All the feelings of fear he had beforee starting this conversation started ringing in his head. However, he comforted Sara and said, “it’s okay sara. Whatever you want. I wanted to truthfully convey to you how much I like you, admire you and how much I would love to be with you, but I don’t want to cause any distress to you. If you don’t want this right now. I will not push you”"}]}, {"num": 12, "titleFr": "Une nouvelle tape sur l’épaule", "titleEn": "Another tap on the shoulder", "image": "images/scene_12.jpg", "pause": {"title": "The ending returns to the first request", "subtitle": "Reported speech and a repeated action", "models": [{"fr": "Il s’est assoupi.", "ipa": "/il sɛ tasupi/", "en": "He dozed off.", "id": "s12_m01", "audio": "audio/s12_m01.mp3"}, {"fr": "Elle lui a demandé s’il pouvait se décaler.", "ipa": "/ɛl lɥi a dəmɑ̃de sil puvɛ sə dekale/", "en": "She asked him if he could move over.", "id": "s12_m02", "audio": "audio/s12_m02.mp3"}, {"fr": "Elle voulait s’asseoir à côté de lui.", "ipa": "/ɛl vulɛ saswaʁ a kote də lɥi/", "en": "She wanted to sit beside him.", "id": "s12_m03", "audio": "audio/s12_m03.mp3"}], "prompts": ["1. Say he dozed off.", "2. Say she asked him if he could move over. Use lui for Ayaan."]}, "paragraphs": [{"id": "s12_p01", "cast": "Narrator", "segments": [{"id": "s12_p01", "audio": "audio/s12_p01.mp3", "voice": "NARRATOR", "text": "Après ces mots, Ayaan lui a dit qu’il allait lui laisser un peu d’espace."}], "fr": "Après ces mots, Ayaan lui a dit qu’il allait lui laisser un peu d’espace.", "en": "Ayaan, after saying this, said he would give her space now."}, {"id": "s12_p02", "cast": "Narrator", "segments": [{"id": "s12_p02", "audio": "audio/s12_p02.mp3", "voice": "NARRATOR", "text": "Il lui a dit qu’il allait sortir un moment et chercher une autre place pour s’asseoir."}], "fr": "Il lui a dit qu’il allait sortir un moment et chercher une autre place pour s’asseoir.", "en": "He said he would step outside for a moment and find some other place to sit."}, {"id": "s12_p03", "cast": "Narrator", "segments": [{"id": "s12_p03", "audio": "audio/s12_p03.mp3", "voice": "NARRATOR", "text": "Ayaan est descendu sur le quai. Sara ne lui avait pas demandé de partir, mais elle ne l’a pas retenu. Elle est restée à sa place, en réfléchissant à ce qui venait de se passer. Avant le départ, Ayaan est remonté dans un autre compartiment. Le train s’est remis en marche. Il a trouvé une place, repensé à tout ce qui s’était passé, puis s’est assoupi. Soudain, il a senti une légère tape sur son épaule. Son cœur a explosé encore une fois. Sara lui a demandé s’il pouvait se décaler pour qu’elle puisse s’asseoir à côté de lui."}], "fr": "Ayaan est descendu sur le quai. Sara ne lui avait pas demandé de partir, mais elle ne l’a pas retenu. Elle est restée à sa place, en réfléchissant à ce qui venait de se passer. Avant le départ, Ayaan est remonté dans un autre compartiment. Le train s’est remis en marche. Il a trouvé une place, repensé à tout ce qui s’était passé, puis s’est assoupi. Soudain, il a senti une légère tape sur son épaule. Son cœur a explosé encore une fois. Sara lui a demandé s’il pouvait se décaler pour qu’elle puisse s’asseoir à côté de lui.", "en": "Ayaan got off the train. Sara did not ask him to go, but did not stop him. Sara sat in her place contemplating what had just happened. Before departure, Ayaan boarded a different compartment. The train started again, and he found a place to sit. He thought about all the things that had happened and dozed off. Suddenly, he felt a tap on his shoulder. His heart exploded again, and she asked if he could move so that she could sit beside him."}]}], "glossary": [{"fr": "le soleil couchant", "ipa": "/lə sɔlɛj kuʃɑ̃/", "en": "the setting sun", "id": "g01", "audio": "audio/g01.mp3"}, {"fr": "les genoux", "ipa": "/le ʒənu/", "en": "the knees, or the lap in context", "id": "g02", "audio": "audio/g02.mp3"}, {"fr": "tomber sous le charme de quelqu’un", "ipa": "/tɔ̃be su lə ʃaʁm də kɛlkœ̃/", "en": "to fall for someone, to be charmed by someone", "id": "g03", "audio": "audio/g03.mp3"}, {"fr": "un regard furtif", "ipa": "/œ̃ ʁəɡaʁ fyʁtif/", "en": "a furtive glance", "id": "g04", "audio": "audio/g04.mp3"}, {"fr": "se décaler", "ipa": "/sə dekale/", "en": "to move over", "id": "g05", "audio": "audio/g05.mp3"}, {"fr": "s’asseoir", "ipa": "/saswaʁ/", "en": "to sit down", "id": "g06", "audio": "audio/g06.mp3"}, {"fr": "côté fenêtre", "ipa": "/kote fənɛtʁ/", "en": "on the window side", "id": "g07", "audio": "audio/g07.mp3"}, {"fr": "côté couloir", "ipa": "/kote kulwaʁ/", "en": "on the aisle side", "id": "g08", "audio": "audio/g08.mp3"}, {"fr": "briser la glace", "ipa": "/bʁize la ɡlas/", "en": "to break the ice", "id": "g09", "audio": "audio/g09.mp3"}, {"fr": "prendre au dépourvu", "ipa": "/pʁɑ̃dʁ o depuʁvy/", "en": "to catch off guard", "id": "g10", "audio": "audio/g10.mp3"}, {"fr": "avoir faim", "ipa": "/avwaʁ fɛ̃/", "en": "to be hungry", "id": "g11", "audio": "audio/g11.mp3"}, {"fr": "des papillons dans le ventre", "ipa": "/de papijɔ̃ dɑ̃ lə vɑ̃tʁ/", "en": "butterflies in the stomach", "id": "g12", "audio": "audio/g12.mp3"}, {"fr": "les mains vides", "ipa": "/le mɛ̃ vid/", "en": "empty-handed", "id": "g13", "audio": "audio/g13.mp3"}, {"fr": "revenir à la case départ", "ipa": "/ʁəvəniʁ a la kaz depaʁ/", "en": "to be back at square one", "id": "g14", "audio": "audio/g14.mp3"}, {"fr": "une colocataire", "ipa": "/yn kɔlɔkatɛʁ/", "en": "a female flatmate or roommate", "id": "g15", "audio": "audio/g15.mp3"}, {"fr": "se confier", "ipa": "/sə kɔ̃fje/", "en": "to open up, to confide", "id": "g16", "audio": "audio/g16.mp3"}, {"fr": "tenir à quelqu’un", "ipa": "/təniʁ a kɛlkœ̃/", "en": "to care about someone", "id": "g17", "audio": "audio/g17.mp3"}, {"fr": "réconforter", "ipa": "/ʁekɔ̃fɔʁte/", "en": "to comfort", "id": "g18", "audio": "audio/g18.mp3"}, {"fr": "tenir compagnie à quelqu’un", "ipa": "/təniʁ kɔ̃paɲi a kɛlkœ̃/", "en": "to keep someone company", "id": "g19", "audio": "audio/g19.mp3"}, {"fr": "un logement", "ipa": "/œ̃ lɔʒmɑ̃/", "en": "a place to live, accommodation", "id": "g20", "audio": "audio/g20.mp3"}, {"fr": "s’installer", "ipa": "/sɛ̃stale/", "en": "to settle, to move in", "id": "g21", "audio": "audio/g21.mp3"}, {"fr": "avoir peur de", "ipa": "/avwaʁ pœʁ də/", "en": "to be afraid of", "id": "g22", "audio": "audio/g22.mp3"}, {"fr": "avoir envie de", "ipa": "/avwaʁ ɑ̃vi də/", "en": "to want to, to feel like", "id": "g23", "audio": "audio/g23.mp3"}, {"fr": "laisser un peu d’espace", "ipa": "/lese œ̃ pø dɛspas/", "en": "to give a little space", "id": "g24", "audio": "audio/g24.mp3"}]};
+
+    let state = {
+      view: 'scene',
+      sceneNum: 1,
+      showEnglish: true,
+      speed: 1.0,
+      glossaryQuery: '',
+      isPlaying: false,
+      activeKey: null,
+      isFullScene: false,
+    };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('ayaan_sara_reader_v2') || '{}');
+      if (typeof saved.sceneNum === 'number') state.sceneNum = saved.sceneNum;
+      if (typeof saved.showEnglish === 'boolean') state.showEnglish = saved.showEnglish;
+    } catch (e) {}
+
+    function saveState() {
+      try {
+        localStorage.setItem('ayaan_sara_reader_v2', JSON.stringify({
+          sceneNum: state.sceneNum,
+          showEnglish: state.showEnglish
+        }));
+      } catch (e) {}
+    }
+
+    const mp3Player = document.getElementById('mp3Player');
+    const synth = window.speechSynthesis || null;
+    let playQueue = [];
+    let playIdx = 0;
+
+    function syncPlayButtons(activeCardId = null) {
+      document.querySelectorAll('.play-para-btn, .play-single-btn').forEach(btn => {
+        const key = btn.dataset.toggleKey;
+        const isCurrent = state.isPlaying && (key === state.activeKey || (state.isFullScene && key === activeCardId));
+        if (isCurrent) {
+          btn.textContent = '■ Stop';
+          btn.classList.remove('btn-primary');
+          btn.classList.add('btn-stop');
+        } else {
+          btn.textContent = '▶ Listen';
+          btn.classList.remove('btn-stop');
+          btn.classList.add('btn-primary');
+        }
+      });
+      const sceneBtn = document.getElementById('playSceneBtn');
+      if (sceneBtn) {
+        if (state.isPlaying && state.isFullScene) {
+          sceneBtn.textContent = '■ Stop Scene';
+          sceneBtn.classList.remove('btn-primary');
+          sceneBtn.classList.add('btn-stop');
+        } else {
+          sceneBtn.textContent = '▶ Play Full Scene';
+          sceneBtn.classList.remove('btn-stop');
+          sceneBtn.classList.add('btn-primary');
+        }
+      }
+    }
+
+    function clearHighlight() {
+      document.querySelectorAll('.playing-card').forEach(el => el.classList.remove('playing-card'));
+    }
+
+    function stopAudio() {
+      state.isPlaying = false;
+      state.activeKey = null;
+      state.isFullScene = false;
+      playQueue = [];
+      playIdx = 0;
+      mp3Player.pause();
+      mp3Player.removeAttribute('src');
+      mp3Player.onended = null;
+      mp3Player.onerror = null;
+      if (synth) synth.cancel();
+      clearHighlight();
+      syncPlayButtons();
+    }
+
+    function speakFallback(text, onDone) {
+      if (!synth) { if (onDone) onDone(); return; }
+      synth.cancel();
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'fr-FR';
+      utt.rate = state.speed;
+      utt.onend = () => { if (onDone) onDone(); };
+      utt.onerror = () => { if (onDone) onDone(); };
+      synth.speak(utt);
+    }
+
+    function runQueue(items, toggleKey, isFullScene = false) {
+      if (state.isPlaying && (state.activeKey === toggleKey || (state.isFullScene && items.length === 1 && state.activeKey === 'scene') || (state.isFullScene && !isFullScene && document.querySelector(`[data-clip-id="${toggleKey}"].playing-card`)))) {
+        stopAudio();
+        return;
+      }
+      stopAudio();
+      if (!items.length) return;
+      state.isPlaying = true;
+      state.activeKey = toggleKey;
+      state.isFullScene = isFullScene;
+      playQueue = items;
+      playIdx = 0;
+
+      function next() {
+        if (!state.isPlaying || playIdx >= playQueue.length) {
+          stopAudio();
+          return;
+        }
+        const item = playQueue[playIdx++];
+        clearHighlight();
+        const card = document.querySelector(`[data-clip-id="${item.cardId}"]`);
+        if (card) {
+          card.classList.add('playing-card');
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        syncPlayButtons(item.cardId);
+
+        const advance = () => {
+          if (!state.isPlaying) return;
+          setTimeout(next, item.gapMs || 180);
+        };
+
+        mp3Player.pause();
+        mp3Player.src = item.audio;
+        mp3Player.playbackRate = state.speed;
+        mp3Player.onended = advance;
+        mp3Player.onerror = () => {
+          document.getElementById('audioSourcePill').textContent = 'Browser Fallback';
+          speakFallback(item.text, advance);
+        };
+        const p = mp3Player.play();
+        if (p && typeof p.catch === 'function') {
+          p.then(() => {
+            document.getElementById('audioSourcePill').textContent = 'ElevenLabs MP3';
+          }).catch(() => {
+            document.getElementById('audioSourcePill').textContent = 'Browser Fallback';
+            speakFallback(item.text, advance);
+          });
+        }
+      }
+      next();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderSidebar() {
+      const list = document.getElementById('sceneNavList');
+      list.innerHTML = STORY.scenes.map(sc => {
+        const active = state.view === 'scene' && state.sceneNum === sc.num;
+        return `
+          <button type="button" data-scene="${sc.num}" class="scene-btn ${active ? 'active' : ''}">
+            <div class="scene-btn-fr">${sc.num}. ${escapeHtml(sc.titleFr)}</div>
+            <div class="scene-btn-en">${escapeHtml(sc.titleEn)}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderScene() {
+      const sc = STORY.scenes.find(s => s.num === state.sceneNum) || STORY.scenes[0];
+      const stage = document.getElementById('readerStage');
+
+      const paraCards = sc.paragraphs.map((p, idx) => `
+        <div data-clip-id="${p.id}" class="para-card">
+          <div class="para-head">
+            <div class="para-meta">
+              <span class="para-num">Paragraph ${idx + 1}</span>
+              <span class="cast-badge">${escapeHtml(p.cast)}</span>
+            </div>
+            <button type="button" data-para-idx="${idx}" data-toggle-key="${p.id}" class="btn btn-primary btn-pill play-para-btn">▶ Listen</button>
+          </div>
+          <div class="bilingual-grid ${state.showEnglish ? 'two-col' : ''}">
+            <p class="serif fr-text">${escapeHtml(p.fr)}</p>
+            ${state.showEnglish ? `<p class="en-text">${escapeHtml(p.en)}</p>` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      const modelCards = sc.pause.models.map(m => `
+        <div data-clip-id="${m.id}" class="model-card">
+          <div>
+            <div class="serif model-fr">${escapeHtml(m.fr)}</div>
+            <div class="model-ipa">${escapeHtml(m.ipa)}</div>
+            <div class="model-en">${escapeHtml(m.en)}</div>
+          </div>
+          <button type="button" data-play-id="${m.id}" data-toggle-key="${m.id}" data-play-audio="${escapeHtml(m.audio)}" data-play-text="${escapeHtml(m.fr)}" class="btn btn-primary btn-pill play-single-btn">▶ Listen</button>
+        </div>
+      `).join('');
+
+      const promptItems = sc.pause.prompts.map(pr => `<li>${escapeHtml(pr)}</li>`).join('');
+
+      stage.innerHTML = `
+        <article class="hero-card">
+          ${sc.image ? `<div class="hero-img-wrap"><img src="${escapeHtml(sc.image)}" alt="${escapeHtml(sc.titleFr)}" class="hero-img"></div>` : ''}
+          <div class="hero-body">
+            <div>
+              <div class="kicker">Scene ${sc.num} of 12</div>
+              <h2 class="serif scene-h2">${escapeHtml(sc.titleFr)}</h2>
+              <p class="scene-sub">${escapeHtml(sc.titleEn)}</p>
+            </div>
+            <div class="hero-actions">
+              <button id="playSceneBtn" type="button" class="btn btn-primary">▶ Play Full Scene</button>
+              <button id="prevSceneBtn" type="button" ${sc.num <= 1 ? 'disabled' : ''} class="btn btn-subtle">← Prev</button>
+              <button id="nextSceneBtn" type="button" ${sc.num >= 12 ? 'disabled' : ''} class="btn btn-subtle">Next →</button>
+            </div>
+          </div>
+        </article>
+
+        <section class="para-list">${paraCards}</section>
+
+        <section class="pause-box">
+          <div>
+            <div class="kicker">Reading Pause ${sc.num}</div>
+            <h3 class="serif pause-h3">${escapeHtml(sc.pause.title)}</h3>
+            <p class="scene-sub">${escapeHtml(sc.pause.subtitle)}</p>
+          </div>
+          ${modelCards}
+          ${promptItems ? `
+            <div class="prompts-card">
+              <div class="kicker">Say It From Memory</div>
+              <ul class="prompts-list">${promptItems}</ul>
+            </div>
+          ` : ''}
+        </section>
+      `;
+
+      document.getElementById('playSceneBtn').addEventListener('click', () => {
+        const queue = [];
+        sc.paragraphs.forEach(p => {
+          p.segments.forEach((seg, sIdx) => {
+            queue.push({
+              cardId: p.id,
+              audio: seg.audio,
+              text: seg.text,
+              gapMs: sIdx === p.segments.length - 1 ? 350 : 120,
+            });
+          });
+        });
+        runQueue(queue, 'scene', true);
+      });
+      document.getElementById('prevSceneBtn').addEventListener('click', () => goScene(sc.num - 1));
+      document.getElementById('nextSceneBtn').addEventListener('click', () => goScene(sc.num + 1));
+
+      stage.querySelectorAll('.play-para-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const p = sc.paragraphs[parseInt(btn.dataset.paraIdx, 10)];
+          runQueue(p.segments.map(seg => ({
+            cardId: p.id,
+            audio: seg.audio,
+            text: seg.text,
+            gapMs: 120,
+          })), p.id, false);
+        });
+      });
+
+      stage.querySelectorAll('.play-single-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          runQueue([{
+            cardId: btn.dataset.playId,
+            audio: btn.dataset.playAudio,
+            text: btn.dataset.playText,
+            gapMs: 100,
+          }], btn.dataset.playId, false);
+        });
+      });
+    }
+
+    function renderGlossary() {
+      const stage = document.getElementById('readerStage');
+      const q = state.glossaryQuery.trim().toLowerCase();
+      const filtered = STORY.glossary.filter(g =>
+        !q || g.fr.toLowerCase().includes(q) || g.en.toLowerCase().includes(q)
+      );
+
+      stage.innerHTML = `
+        <section class="glossary-card">
+          <div class="glossary-head">
+            <div>
+              <h2 class="serif scene-h2">Words to Carry From the Story</h2>
+              <p class="scene-sub">Click Listen to hear each expression in native French.</p>
+            </div>
+            <input id="glossarySearch" type="search" value="${escapeHtml(state.glossaryQuery)}" placeholder="Filter expressions..." class="search-input">
+          </div>
+          <div>
+            ${filtered.map(g => `
+              <div data-clip-id="${g.id}" class="glossary-row">
+                <div>
+                  <div class="serif model-fr">${escapeHtml(g.fr)}</div>
+                  <div class="model-ipa">${escapeHtml(g.ipa)}</div>
+                  <div class="model-en">${escapeHtml(g.en)}</div>
+                </div>
+                <button type="button" data-play-id="${g.id}" data-toggle-key="${g.id}" data-play-audio="${escapeHtml(g.audio)}" data-play-text="${escapeHtml(g.fr)}" class="btn btn-primary btn-pill play-single-btn">▶ Listen</button>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      `;
+
+      document.getElementById('glossarySearch').addEventListener('input', (e) => {
+        state.glossaryQuery = e.target.value;
+        renderGlossary();
+      });
+      stage.querySelectorAll('.play-single-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          runQueue([{
+            cardId: btn.dataset.playId,
+            audio: btn.dataset.playAudio,
+            text: btn.dataset.playText,
+            gapMs: 100,
+          }], btn.dataset.playId, false);
+        });
+      });
+    }
+
+    function goScene(num) {
+      if (num < 1 || num > 12) return;
+      stopAudio();
+      state.view = 'scene';
+      state.sceneNum = num;
+      saveState();
+      renderSidebar();
+      renderScene();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('sidebarNav').classList.remove('open');
+    }
+
+    document.getElementById('toggleNavBtn').addEventListener('click', () => {
+      document.getElementById('sidebarNav').classList.toggle('open');
+    });
+    document.getElementById('speedSelect').addEventListener('change', (e) => {
+      state.speed = parseFloat(e.target.value);
+      mp3Player.playbackRate = state.speed;
+    });
+    const engBtn = document.getElementById('toggleEnglishBtn');
+    engBtn.textContent = state.showEnglish ? 'Hide English' : 'Show English';
+    engBtn.addEventListener('click', () => {
+      state.showEnglish = !state.showEnglish;
+      engBtn.textContent = state.showEnglish ? 'Hide English' : 'Show English';
+      saveState();
+      if (state.view === 'scene') renderScene();
+    });
+    document.getElementById('openGlossaryBtn').addEventListener('click', () => {
+      stopAudio();
+      state.view = 'glossary';
+      renderSidebar();
+      renderGlossary();
+      document.getElementById('sidebarNav').classList.remove('open');
+    });
+    document.getElementById('sceneNavList').addEventListener('click', (e) => {
+      const btn = e.target.closest('.scene-btn');
+      if (btn) goScene(parseInt(btn.dataset.scene, 10));
+    });
+
+    renderSidebar();
+    renderScene();
+  </script>
+</body>
+</html>
